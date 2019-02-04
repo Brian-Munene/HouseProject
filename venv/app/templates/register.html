@@ -1,0 +1,44 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<div class="container">
+		<h1>Register</h1>
+		
+		<form method="POST" action="{{ request.path }}">
+			
+				<label for = "first_name">First Name</label><br>
+		        <input type = "text" name = "first_name" placeholder = "First Name" /><br>
+		        <label for = "last_name">Last name</label><br>
+		        <input type = "text" name = "last_name" placeholder = "Last Name" /><br>
+		        <label for = "user_name">User Name</label><br>
+		        <input name = "user_name" placeholder = "User Name"><br>
+		        <label for = "Password">Password</label><br>
+		        <input type = "password" name = "password" placeholder = "password" /><br>
+				<p><input type="submit" class="btn btn-primary" value="Submit"></p>
+		</form>	
+	</div>	 
+{% endblock %}
+
+
+<!--
+			<div class="form-group">
+				{{ form.first_name.label (class_="form-control")}}
+				{{ form.first_name(size=32 ,class_="form-control")}}
+			</div>
+			<div class="form-group">
+				{{ form.last_name.label (class_="form-control")}}
+				{{ form.last_name(size=32, class_="form-control")}}
+			</div>
+			<div class="form-group">
+				{{ form.user_name.label (class_="form-control")}}
+				{{ form.user_name(size=32, class_="form-control")}}
+			</div>
+			<div class="form-group">
+				{{ form.password.label (class_="form-control")}}
+				{{ form.password(size=32, class_="form-control")}}
+			</div>
+			<div class="form-group">
+				{{ form.confirm.label (class_="form-control")}}
+				{{ form.confirm(size=32, class_="form-control")}}
+			</div>
+			-->

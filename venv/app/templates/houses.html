@@ -1,0 +1,10 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<h1>Houses</h1>
+	<ul class="list-group">
+		{% for house in houses %}
+			<li class="list-group-item"> <a href="house/{{house.house_number}}"> {{house.house_number}} {{house.house_type}}: {{house.price}} </a> </li>
+		{% endfor %}
+	</ul>
+{% endblock %}

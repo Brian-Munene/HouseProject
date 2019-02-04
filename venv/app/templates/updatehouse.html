@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<div class="container">
+		<h1>Update House Price</h1>
+		
+		<form method="POST" action="{{ request.path }}">
+		        <label for = "house_number">House Number</label><br>
+		        <input name = "house_number" placeholder = "User Name"><br>
+		         <label for = "new_price"> New Price</label><br>
+		        <input name = "new_price" placeholder = "New Price"><br>
+				<input type="submit" class="btn btn-success" value="Update">
+		</form>	
+	</div>	 
+{% endblock %}

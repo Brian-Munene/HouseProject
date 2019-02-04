@@ -1,0 +1,13 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<div class="container">
+		<h1>Delete User</h1>
+		
+		<form method="POST" action="{{ request.path }}">
+		        <label for = "house_number">House Number</label><br>
+		        <input name = "house_number" placeholder = "House Number"><br>
+				<input type="submit" class="btn btn-danger" value="Delete">
+		</form>	
+	</div>	 
+{% endblock %}

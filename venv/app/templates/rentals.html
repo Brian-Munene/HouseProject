@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<div class="jumbotron">
+		<h1>Welcome to Rentals</h1>
+		<p>have a look at my first flask app!</p>
+	</div>
+	<ul class="list-group">
+		{% for rental in rentals %}
+			<li class="list-group-item"> <a href="rental/{{rental.tenant_name}}"> 
+				Name: {{rental.tenant_name}} <br> 
+				Amount: {{rental.amount_paid}} <br> 
+			</a> </li>
+		{% endfor %}
+	</ul>
+
+{% endblock %}

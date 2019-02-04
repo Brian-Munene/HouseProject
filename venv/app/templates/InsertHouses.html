@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<div class="container">
+		<h1>Insert House</h1>
+		<form method="POST" action="{{ request.path }}">
+			
+				<label for = "Number">House Number</label><br>
+		        <input type = "text" name = "Number" placeholder = "Number" /><br>
+		        <label for = "Price">Price</label><br>
+		        <input type = "text" name = "Price" placeholder = "Price" /><br>
+		        <label for = "Type">Type</label><br>
+		        <input name = "Type" placeholder = "Type"><br>
+				<p><input type="submit" class="btn btn-primary" value="Submit"></p>
+		</form>	
+	</div>	 
+{% endblock %}

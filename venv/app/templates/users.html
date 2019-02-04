@@ -1,0 +1,14 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<div class="jumbotron">
+		<h1>Welcome User</h1>
+		<p>have a look at my first flask app!</p>
+	</div>
+	<ul class="list-group">
+		{% for user in users %}
+			<li class="list-group-item"> <a href="user/{{user.userId}}"> {{user.firstname}}: {{user.lastname}} </a> </li>
+		{% endfor %}
+	</ul>
+
+{% endblock %}

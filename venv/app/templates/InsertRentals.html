@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<div class="container">
+		<h1>Insert Rentals</h1>
+		
+		<form method="POST" action="{{ request.path }}">
+			
+				<label for = "tenant_user_name">Tenant Name</label><br>
+		        <input type = "text" name = "tenant_user_name" placeholder = "Tenant Name" /><br>
+		        <label for = "amount_paid">Amount Paid</label><br>
+		        <input type = "text" name = "amount_paid" placeholder = "Amount Paid" /><br>
+				<p><input type="submit" class="btn btn-primary" value="Submit"></p>
+		</form>	
+	</div>	 
+{% endblock %}
