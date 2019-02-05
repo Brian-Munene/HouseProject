@@ -1,4 +1,4 @@
-from route import db
+from routes import db
 
 #rental Model
 class Rental(db.Model):

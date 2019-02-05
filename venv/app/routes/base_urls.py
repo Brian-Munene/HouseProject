@@ -5,4 +5,5 @@ from routes import app
 
 @app.route('/')
 def index():
+	#return "Brian"
     return render_template('home.html')

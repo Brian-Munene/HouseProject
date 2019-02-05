@@ -1,65 +1,82 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, logging, request
+from flask import Flask, render_template, flash, redirect, url_for, session, logging, request, json, jsonify
 from passlib.hash import sha256_crypt
 
 #file imports
 from routes import app
 from routes import db
+from database.user import User
 
 @app.route('/register', methods = ['GET', 'POST'])	
 def register():
 	#form = RegisterForm(request.form)
 	if request.method == 'POST':
-		#fetch form data
-		firstname = request.form['first_name']
-		lastname = request.form['last_name']
-		username = request.form['user_name']
-		password = sha256_crypt.encrypt(str(request.form['password']))
+		request_json = request.get_json()
+
+		firstname = request_json.get('firstname')
+		lastname = request_json.get('lastname')
+		username = request_json.get('username')
+		password = sha256_crypt.encrypt(str(request_json.get('password')))
 
 		user = User(firstname, lastname, username, password)
 		db.session.add(user)
 		db.session.commit()
 
-		flash('You have been registered', 'success')
-		return redirect(url_for('index'))
-	return render_template('register.html')	
+		return('You have been registered', 'success')
+	return ('Invalid Method')	
 #View all users
 @app.route('/users')
 def users():
+	users = User.query.all()
 
-	#View all users
-	return render_template('users.html', users = User.query.all() )
+	usersList = []
+	for user in users:
+		users_dict = {
+				'firstname': user.firstname,
+				'lastname': user.lastname,
+				'username': user.username
+				}
+		usersList.append(users_dict)
+	return jsonify({'data' :usersList})
+	
 
 #View a single user
 
 @app.route('/user/<string:id>/')	
 def user(id):
-	return render_template('user.html', user = User.query.get(id))
+	user = User.query.get(id)
+	user_dict = {
+				'firstname': user.firstname,
+				'lastname': user.lastname,
+				'username': user.username
+				}
+	return json.dumps(user_dict)
 
 #Delete a user
 
 @app.route('/deleteuser', methods = ['POST', 'GET'])
 def delete_user():
 	if request.method =='POST':
-		username = request.form['user_name']
+		request_json = request.get_json()
+		username = request_json.get('username')
 		user = User.query.filter_by(username = username).first()
 		db.session.delete(user)
 		db.session.commit()
 
-		flash('The user has been deleted!', 'danger')
-		return redirect(url_for('index'))
-	return render_template('deleteuser.html')
+		return('The user has been deleted!', 'success')
+	return ('Invalid Method')
 
 #Update  username
 
 @app.route('/updateuser', methods = ['POST', 'GET'])
 def update_user():
 	if request.method == 'POST':
-		username_current = request.form['user_name']
-		new_username = request.form['new_name']
+		request_json = request.get_json()
+
+		username_current = request_json.get('username')
+		new_username = request_json.get('new_name')
 		user = User.query.filter_by(username = username_current).first()
 		user.username = new_username
 
 		db.session.commit()
-		flash('Username updated!', 'success')
-		return redirect(url_for('index'))
-	return render_template('updateuser.html')
+		return('Username updated!', 'success')
+	return ('Invalid Method')
