@@ -1,4 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy
 from routes import db
 
-from database import house, rental, user
+from database import building, house, rental, user, complaint, images

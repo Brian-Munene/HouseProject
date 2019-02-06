@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, logging, request, json, jsonify
+from flask import Flask, session, logging, request, json, jsonify
 from passlib.hash import sha256_crypt
 
 #file imports
@@ -16,8 +16,9 @@ def register():
 		lastname = request_json.get('lastname')
 		username = request_json.get('username')
 		password = sha256_crypt.encrypt(str(request_json.get('password')))
+		category = request_json.get('category')
 
-		user = User(firstname, lastname, username, password)
+		user = User(firstname, lastname, username, password, category)
 		db.session.add(user)
 		db.session.commit()
 
@@ -33,7 +34,8 @@ def users():
 		users_dict = {
 				'firstname': user.firstname,
 				'lastname': user.lastname,
-				'username': user.username
+				'username': user.username,
+				'category': user.category
 				}
 		usersList.append(users_dict)
 	return jsonify({'data' :usersList})
@@ -47,9 +49,10 @@ def user(id):
 	user_dict = {
 				'firstname': user.firstname,
 				'lastname': user.lastname,
-				'username': user.username
+				'username': user.username,
+				'category':user.category
 				}
-	return json.dumps(user_dict)
+	return jsonify({'data' :user_dict})
 
 #Delete a user
 
@@ -80,3 +83,17 @@ def update_user():
 		db.session.commit()
 		return('Username updated!', 'success')
 	return ('Invalid Method')
+
+@app.route('/SingleCategoryUser/<string:category>/')
+def single_category_user(category):
+	users = User.query.filter_by(category = category)
+	usersList = []
+	for user in users:
+		users_dict = {
+				'firstname': user.firstname,
+				'lastname': user.lastname,
+				'username': user.username,
+				'category': user.category
+				}
+		usersList.append(users_dict)
+	return jsonify({'data' :usersList}) 

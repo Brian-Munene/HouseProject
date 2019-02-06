@@ -1,10 +1,12 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, logging, request,json, jsonify
+from flask import Flask, session, logging, request,json, jsonify
+from datetime import datetime
 from passlib.hash import sha256_crypt
 
 #file imports
 from routes import app
 from routes import db
 from database.rental import Rental
+from database.user import User
 
 @app.route('/InsertRentals', methods = ['GET', 'POST'])
 def insert_rentals():
@@ -12,14 +14,18 @@ def insert_rentals():
 	if request.method =='POST':
 
 		request_json = request.get_json()
-		tenant = request_json.get('tenant_user_name')
+		tenant = request_json.get('tenant_name')
 		amount = request_json.get('amount_paid')
+		paid_at = request_json.get('paid_at')
+		house_id = request_json.get('house_id')
+		user_id = request_json.get('user_id')
 
-		rental = Rental(tenant, amount)
+		rental = Rental(tenant, amount, paid_at, user_id, house_id)
 		db.session.add(rental)
 		db.session.commit()
 
 		return('Rental details successfully added', 'success')
+	return('Invalid Method')
 
 #Read all rentals
 

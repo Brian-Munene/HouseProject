@@ -1,10 +1,11 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, logging, request, json, jsonify
-from passlib.hash import sha256_crypt
+from flask import Flask, session, logging, request, json, jsonify
+
 
 #file imports
 from routes import app
 from routes import db
 from database.house import House
+from database.user import User
 
 
 @app.route('/InsertHouses', methods =['GET', 'POST'])
@@ -16,12 +17,15 @@ def insert_houses():
 		Number = request_json.get('Number')
 		Price = request_json.get('Price')
 		Type = request_json.get('Type')
+		user_id = request_json.get('user_id')  
+		building_id = request_json.get('building_id')
 
-		house = House(Number, Price, Type)
+		house = House(Number, Price, Type, user_id, building_id)
 		db.session.add(house)
 		db.session.commit()
 
-		return "Success"
+		return ("Success",200)
+	return ("Invalid Method")
 
 #View all houses
 
