@@ -37,7 +37,8 @@ def rentals():
 	for rental in rentals:
 		rentals_dict = {
 				'tenant name': rental.tenant_name,
-				'amount paid': rental.amount_paid
+				'amount paid': rental.amount_paid,
+				'date_paid': rental.paid_at
 				}
 		rentalsList.append(rentals_dict)
 	return jsonify({'data' :rentalsList})
@@ -51,7 +52,8 @@ def rental(tenant_name):
 	rental = Rental.query.filter_by(tenant_name = tenant_name).first()
 	rental_dict = {
 		'Tenant Name': rental.tenant_name,
-		'Amount Paid': rental.amount_paid
+		'Amount Paid': rental.amount_paid,
+		'Paid_At': rental.paid_at
 	}
 
 	return jsonify(rental_dict)

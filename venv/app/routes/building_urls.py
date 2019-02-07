@@ -28,8 +28,8 @@ def view_buildings():
     buildingList = []
     for building in buildings:
         buildings_dict = {
-            'Name': building.name,
-            'Number': building.number,
+            'Name': building.building_name,
+            'Number': building.building_number,
             'Type': building.building_type
         }
         buildingList.append(buildings_dict)
@@ -41,10 +41,10 @@ def view_specific_building():
         request_json = request.get_json()
         number = request_json.get('Number')
 
-        building = Building.query.filter_by(number = number).first()
+        building = Building.query.filter_by(building_number = number).first()
         building_dict = {
-            'Name': building.name,
-            'Number': building.number,
+            'Name': building.building_name,
+            'Number': building.building_number,
             'Type': building.building_type
         }
         return jsonify({'data': building_dict})
@@ -55,17 +55,18 @@ def update_building():
     if request.method == 'POST':
         request_json = request.get_json()
         number = request_json.get('Number')
-        new_name = request_json.get('New Name')
-        new_type = request_json.get('New Type')
-        building = Building.query.filter_by(number = number).first()
+        new_name = request_json.get('new_name')
+        new_type = request_json.get('new_type')
+        building = Building.query.filter_by(building_number = number).first()
+        old_name = building.building_name
         if new_name and new_type:
-            building.name = new_name
-            db.session.commit
-            building.type = new_type
+            old_name = new_name
+            db.session.flush()
+            building.building_type = new_type
             db.session.commit()
             return("Building name and type have been changed", "Success")
         elif new_name:
-            building.name = new_name
+            building.building_name = new_name
             db.session.commit()
             return ('The name has been changed', "success")
         elif new_type:
@@ -73,5 +74,14 @@ def update_building():
             db.session.commit()
             return('The type has been changed', "Success")
     return("Method not allowed")
+
+@app.route('/DeleteBuilding', methods=['POST'])
+def delete_building():
+    request_json = request.get_json()
+    number = request_json.get('Number')
+    building = Building.query.filter_by(building_number = number).first()
+    db.session.delete(building)
+    db.session.commit()
+    return('Building has been deleted', 'Success')
 
 

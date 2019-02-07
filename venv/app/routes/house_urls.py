@@ -54,7 +54,7 @@ def house(id):
 		'house_type': house.house_type	
 	}
 	
-	return json.dumps(house_dict)
+	return jsonify({'data': house_dict})
 	  
 
 #Update  House details
@@ -79,10 +79,11 @@ def update_house():
 def delete_house():
 	if request.method =='POST':
 		request_json = request.get_json()
-		house_number = request_json.get('house_number')
+		house_number = request_json.get('Number')
 		house = House.query.filter_by(house_number = house_number).first()
 		db.session.delete(house)
 		db.session.commit()
 
 		return('The House has been deleted!', 'danger')
+	return("Invalid Method")
 

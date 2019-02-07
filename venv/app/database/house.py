@@ -7,12 +7,12 @@ class Building(db.Model):
     __tablename__ = 'buildings'
 
     building_id = db.Column(db.Integer, primary_key = True)
-    name = db.Column(db.String(35), nullable = False)
-    number = db.Column(db.Integer, nullable = False, unique = True)
+    building_name = db.Column(db.String(35), nullable = False)
+    building_number = db.Column(db.Integer, nullable = False, unique = True)
     building_type = db.Column(db.String(35), nullable = False)
     houses = db.relationship('House', backref = 'buildings', lazy = True)
     
-    def __init__(self, name, number, building_type):
+    def __init__(self, building_name, building_number, building_type):
         self.name = name
         self.number = number
         self.building_type = building_type

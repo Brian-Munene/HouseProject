@@ -24,6 +24,10 @@ def register():
 
 		return('You have been registered', 'success')
 	return ('Invalid Method')	
+
+#Login Existing user
+
+
 #View all users
 @app.route('/users')
 def users():
