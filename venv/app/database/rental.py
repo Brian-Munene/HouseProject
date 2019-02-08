@@ -31,17 +31,20 @@ class Complaint(db.Model):
 	complaint_id = db.Column(db.Integer, primary_key = True)
 	message = db.Column(db.Text(75), nullable = False)
 	due_date = db.Column(db.DateTime, nullable = True)
-	fixed_date = db.Column(db.DateTime, nullable = True)    
+	fixed_date = db.Column(db.DateTime, nullable = True)   
 	user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable = False)
+	house_id = db.Column(db.Integer, db.ForeignKey('houses.house_id'), nullable = False)
 	#Relationship with images table
 	images = db.relationship('Image', backref = 'complaints', lazy = True)
 
-	def __init__(self, date_posted, message, due_date, fixed_date, user_id):
+	def __init__(self, date_posted, message, due_date, fixed_date, user_id, house_id):
 		self.user_id = user_id
 		self.date_posted = date_posted
 		self.message = message
 		self.due_date = due_date
 		self.fixed_date = fixed_date
+		self.house_id = house_id
+
 
 #Images Model
 class Image(db.Model):

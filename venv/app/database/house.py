@@ -29,6 +29,7 @@ class House(db.Model):
 	user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable = False)
 	building_id = db.Column(db.Integer, db.ForeignKey('buildings.building_id'), nullable = True)
 	rentals = db.relationship('Rental', backref = 'houses', lazy = True)
+	complaints = db.relationship('Complaint', backref = 'houses', lazy = True)
 
 	def __init__(self, house_number, price, house_type, user_id, building_id):
 		self.house_number = house_number

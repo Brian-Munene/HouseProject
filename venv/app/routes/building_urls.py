@@ -58,9 +58,9 @@ def update_building():
         new_name = request_json.get('new_name')
         new_type = request_json.get('new_type')
         building = Building.query.filter_by(building_number = number).first()
-        old_name = building.building_name
+        
         if new_name and new_type:
-            old_name = new_name
+            building.building_name = new_name
             db.session.flush()
             building.building_type = new_type
             db.session.commit()

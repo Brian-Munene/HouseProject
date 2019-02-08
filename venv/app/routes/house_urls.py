@@ -65,14 +65,48 @@ def update_house():
 		request_json = request.get_json()
 		house_number = request_json.get('Number')
 		new_price = request_json.get('Price')
-		
+		new_house_number = request_json.get('new_number')
+		new_type = request_json.get('new_type')
 		house = House.query.filter_by(house_number = house_number).first()
-		house.price = new_price
-
-		db.session.commit()
-		return('House Price updated!', 'success')
-		
-
+		if new_price and new_house_number and new_type:
+			house.price = new_price
+			db.session.flush()
+			house.house_type = new_type
+			db.session.flush()
+			house.house_number = new_house_number
+			db.session.commit()
+			return ("House number, price and type have been changed!","Success")
+		elif new_price and new_house_number:
+			house.price = new_price
+			db.session.flush()
+			house.house_number = new_house_number
+			db.session.commit()
+			return ("House number and price have been changed!","Success")
+		elif new_price and new_type:
+			house.price = new_price
+			db.session.flush()
+			house.house_type = new_type
+			db.session.commit()
+			return ("House type and price have been changed!","Success")
+		elif new_house_number and new_type:
+			house.house_type = new_type
+			db.session.flush()
+			house.house_number = new_house_number
+			db.session.commit()
+			return ("House number and type have been changed!","Success")
+		elif new_house_number:
+			house.house_number = new_house_number
+			db.session.commit()
+			return ("House number has been changed!", "success")
+		elif new_type:
+			house.house_type = new_type
+			db.session.commit()
+			return("House type has been changed!","Success")
+		elif new_price:
+			house.price = new_price
+			db.session.commit()
+			return("House Price has been changed", "Success")
+			
 #Delete a House
 
 @app.route('/deletehouse', methods = ['POST', 'GET'])

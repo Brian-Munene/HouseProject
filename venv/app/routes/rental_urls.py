@@ -65,13 +65,24 @@ def update_rental():
 		request_json = request.get_json()
 		tenant_name = request_json.get('tenant_name')
 		new_amount = request_json.get('new_amount')
+		new_tenant_name = request_json.get('new_tenant_name')
 
 		rental = Rental.query.filter_by(tenant_name = tenant_name).first()
-		rental.amount_paid = new_amount
-
-		db.session.commit()
 		
-		return('Payment updated!', 'success')
+		if new_amount and new_tenant_name:
+			rental.tenant_name = new_tenant_name
+			db.session.flush()
+			rental.amount_paid = new_amount
+			db.session.commit()
+			return('Tenant name and Payment updated!', 'success')
+		elif new_amount:
+			rental.amount_paid = new_amount
+			db.session.commit()
+			return('Payment updated!', 'success')
+		elif new_tenant_name:
+			rental.tenant_name = new_tenant_name
+			db.session.commit()
+			return("Tenant name Updated!", "success")
 
 #Delete rental
 @app.route('/deleterental', methods = ['GET','POST'])

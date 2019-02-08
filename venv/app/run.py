@@ -3,8 +3,11 @@ from flask_mysqldb import MySQL
 from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import sha256_crypt
 import pymysql.cursors
+from flask_httpauth import HTTPBasicAuth
 
 from routes import app
+
+auth = HTTPBasicAuth()
 
 if __name__ == "__main__":
 	app.secret_key='secret123'
