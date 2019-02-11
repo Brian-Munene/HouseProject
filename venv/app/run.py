@@ -10,5 +10,5 @@ from routes import app
 auth = HTTPBasicAuth()
 
 if __name__ == "__main__":
-	app.secret_key='secret123'
+	app.config['SECRET_KEY'] = 'secret123'
 	app.run(debug=True)

@@ -5,5 +5,6 @@ class Image(db.Model):
     image_url = db.Column(db.String(75), nullable = False)
     complaint_id = db.Column(db.Integer, db.ForeignKey('complaints.complaint_id'), nullable = False)
 
-    def __init__(self, image_id, image_url):
+    def __init__(self, image_id, image_url, complaint_id):
         self.image_url = image_url
+        self.complaint_id = complaint_id
