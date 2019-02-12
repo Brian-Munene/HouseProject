@@ -1,9 +1,8 @@
 from flask import Flask, session, g, logging, request
 from flask_mysqldb import MySQL
 from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from passlib.hash import sha256_crypt
-import pymysql.cursors
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename
 import os

@@ -1,5 +1,6 @@
 from flask import Flask, url_for, session, g, logging, request, json, jsonify
 from flask_httpauth import HTTPBasicAuth
+from datetime import datetime, timedelta
 from passlib.hash import sha256_crypt
 #file imports
 from routes import app
@@ -38,19 +39,90 @@ def register():
 @app.route('/login', methods=['POST'])
 @auth.verify_password
 def login():
-    request_json = request.get_json()
-    
-    username = request_json.get('username')
-    password = request_json.get('password')
-    if username is None or password is None:
-        return "Missing arguments", 400 #missing arguments
-    user = User.query.filter_by(username=username).first()
-    if not user or not user.verify_password(password):
-        return False
-    g.user = user
-    access_token = g.user.generate_access_token()
-    return jsonify({'firstname': g.user.firstname, 'lastname': g.user.lastname, 'username': g.user.username, 'userType':
-        g.user.category, 'public_id': g.user.user_id, 'access_token': access_token}), 201
+    try:
+        request_json = request.get_json()
+
+        username = request_json.get('username')
+        password = request_json.get('password')
+        if username is None or password is None:
+            return "Missing arguments", 400 #missing arguments
+
+        user = User.query.filter_by(username=username).first()
+
+        if  user and user.verify_password(password):
+            auth_token = user.encode_auth_token(user.user_id)
+            if auth_token:
+                app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+                response_object = {
+                    'message': 'Successfully Logged in.',
+                    'status': 'success',
+                    'public_id': user.user_id,
+                    'user_type': user.category,
+                    'firstname': user.firstname,
+                    'lastname': user.lastname,
+                    'username': user.username
+                }
+                return jsonify(response_object), 200
+            else:
+                app.logger.warning('{0} tried to log in at {1}'.format(username, datetime.now()))
+                response_object = {
+                    'message': 'Incorrect username or password'
+                }
+                return jsonify(response_object), 422
+        else:
+            app.logger.warning('{0} tried to log in at {1}'.format(username, datetime.now()))
+
+            response_object = {
+                    'message': 'Incorrect username or password'
+                }
+            return jsonify(response_object), 422
+    except(Exception, NameError, TypeError, RuntimeError, ValueError) as identifier:
+        response_object = {
+            'status': str(identifier),
+            'message': 'Try again @login',
+            'user': username.json()
+        }
+        return jsonify(response_object), 500
+    except NameError as name_identifier:
+        response_object = {
+            'status': str(name_identifier),
+            'message': 'Try again @login',
+            'error': 'Name',
+            'username': username.json()
+        }
+        return jsonify(response_object), 500
+    except TypeError as type_identifier:
+        response_object = {
+            'status': str(type_identifier),
+            'message': 'Try again @login',
+            'error': 'Type',
+            'username': username.json()
+        }
+        return jsonify(response_object), 500
+    except RuntimeError as run_identifier:
+        response_object = {
+            'status': str(run_identifier),
+            'message': 'Try again @login',
+            'error': 'Runtime',
+            'username': username.json()
+        }
+        return jsonify(response_object), 500
+    except ValueError as val_identifier:
+        response_object = {
+            'status': str(val_identifier),
+            'message': 'Try again @login',
+            'error': 'Value',
+            'username': username.json()
+        }
+        return jsonify(response_object), 500
+    except Exception as exc_identifier:
+        response_object = {
+            'status': str(exc_identifier),
+            'message': 'Try again @login',
+            'error': 'Exception',
+            'username': username.json(),
+        }
+        return jsonify(response_object), 500
 
 
 #View all users
@@ -72,7 +144,7 @@ def users():
 
 #View a single user
 
-@app.route('/user/<string:id>/')    
+@app.route('/user/<id>/')
 def user(id):
     user = User.query.get(id)
     user_dict = {
@@ -86,12 +158,12 @@ def user(id):
 #Delete a user
 
 
-@app.route('/deleteuser', methods = ['POST', 'GET'])
+@app.route('/deleteuser', methods=['POST', 'GET'])
 def delete_user():
     if request.method == 'POST':
         request_json = request.get_json()
         username = request_json.get('username')
-        user = User.query.filter_by(username = username).first()
+        user = User.query.filter_by(username=username).first()
         db.session.delete(user)
         db.session.commit()
 
@@ -101,7 +173,7 @@ def delete_user():
 
 #Update  username
 
-@app.route('/updateuser', methods = ['POST', 'GET'])
+@app.route('/updateuser', methods=['POST', 'GET'])
 def update_user():
     if request.method == 'POST':
         request_json = request.get_json()
@@ -112,7 +184,7 @@ def update_user():
         new_username = request_json.get('new_username')
         category = request_json.get('category')
         
-        user = User.query.filter_by(username = current_username).first()
+        user = User.query.filter_by(username=current_username).first()
         
         if firstname and lastname and category and new_username: 
             user.firstname = firstname 
@@ -203,3 +275,46 @@ def single_category_user(category):
                 }
         usersList.append(users_dict)
     return jsonify({'data': usersList})
+
+
+@app.route('/logout')
+def logout(self):
+    #get auth token
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        auth_token = auth_header.split(" ")[1]
+    else:
+        auth_token = ' '
+    if auth_token:
+        resp = User.decode_auth_token(auth_token)
+        if not isinstance(resp, str):
+            #mark the token as blacklisted
+            blacklist_token =Token(token=0)#blacklisted token
+            try:
+                #insert the token
+                db.session.add(blacklist_token)
+                db.session.commit()
+                response_object = {
+                    'status': 'success',
+                    'message': 'Successfully logged out.'
+                }
+                return jsonify(response_object), 200
+            except Exception as e:
+                response_object = {
+                    'status': 'fail',
+                    'message': str(e)
+                }
+                return jsonify(response_object), 200
+        else:
+            response_object = {
+                'status': 'fail',
+                'message': resp
+            }
+            return jsonify(response_object), 401
+    else:
+        response_object = {
+            'status': 'fail',
+            'message': 'Provide a valid auth token.'
+        }
+        return jsonify(response_object), 403
+
