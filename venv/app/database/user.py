@@ -63,25 +63,41 @@ class User(db.Model):
     firstname = db.Column(db.String(75), nullable=False)
     lastname = db.Column(db.String(75), nullable=False)
     username = db.Column(db.String(75), unique=True, nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     category = db.Column(db.String(30), nullable=False)
+    tokens = db.relationship('Token', backref='users', lazy=True)
     houses = db.relationship('House', backref='users', lazy=True)
     rental = db.relationship('Rental', backref='users', lazy=True)
     complaints = db.relationship('Complaint', backref='users', lazy=True)
 
-    def __init__(self, firstname, lastname, username, category):
+    def __init__(self, firstname, lastname, username, category, email):
         self.firstname = firstname
         self.lastname = lastname
         self.username = username
         self.category = category
+        self.email = email
 
 
 class Token(db.Model):
+    __tablename__ = 'Tokens'
+
     id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.String(100), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), index=True)
     token = db.Column(db.Text, nullable=False)
-    client_id =
+    client_id = db.Column(db.Integer, nullable=True)
+    scopes = db.Column(db.Text, nullable=True)
+    revoked = db.Column(db.Integer, nullable=True)
+
+    def __init__(self, user_id, client_id, scopes, revoked):
+        self.user_id = user_id
+        self.client_id = client_id
+        self.scopes = scopes
+        self.revoked = revoked
+
+
+
+
 
 
 

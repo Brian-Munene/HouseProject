@@ -6,13 +6,14 @@ from passlib.hash import sha256_crypt
 from routes import app
 from routes import db
 from database.user import User
+from database.user import Token
 
 auth = HTTPBasicAuth()
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    #form = RegisterForm(request.form)
+
     if request.method == 'POST':
         request_json = request.get_json()
 
@@ -80,7 +81,7 @@ def login():
         response_object = {
             'status': str(identifier),
             'message': 'Try again @login',
-            'user': username.json()
+            'user': username
         }
         return jsonify(response_object), 500
     except NameError as name_identifier:
@@ -88,7 +89,7 @@ def login():
             'status': str(name_identifier),
             'message': 'Try again @login',
             'error': 'Name',
-            'username': username.json()
+            'username': username
         }
         return jsonify(response_object), 500
     except TypeError as type_identifier:
@@ -96,7 +97,7 @@ def login():
             'status': str(type_identifier),
             'message': 'Try again @login',
             'error': 'Type',
-            'username': username.json()
+            'username': username
         }
         return jsonify(response_object), 500
     except RuntimeError as run_identifier:
@@ -104,7 +105,7 @@ def login():
             'status': str(run_identifier),
             'message': 'Try again @login',
             'error': 'Runtime',
-            'username': username.json()
+            'username': username
         }
         return jsonify(response_object), 500
     except ValueError as val_identifier:
@@ -112,7 +113,7 @@ def login():
             'status': str(val_identifier),
             'message': 'Try again @login',
             'error': 'Value',
-            'username': username.json()
+            'username': username
         }
         return jsonify(response_object), 500
     except Exception as exc_identifier:
@@ -120,7 +121,7 @@ def login():
             'status': str(exc_identifier),
             'message': 'Try again @login',
             'error': 'Exception',
-            'username': username.json(),
+            'username': username
         }
         return jsonify(response_object), 500
 
@@ -146,6 +147,7 @@ def users():
 
 @app.route('/user/<id>/')
 def user(id):
+
     user = User.query.get(id)
     user_dict = {
                 'firstname': user.firstname,
@@ -167,7 +169,7 @@ def delete_user():
         db.session.delete(user)
         db.session.commit()
 
-        return 'The user has been deleted!', 201
+        return 'The user has been deleted!', 200
     return 'Invalid Method', 400
 
 
@@ -195,13 +197,13 @@ def update_user():
             db.session.flush() 
             user.category = category 
             db.session.commit() 
-            return "Firstname, Lastname, Username and Category have been changed", 201
+            return "Firstname, Lastname, Username and Category have been changed", 200
         elif firstname and lastname:
             user.firstname = firstname
             db.session.flush()
             user.lastname = lastname
             db.session.commit()
-            return "Firstname and lastname have been changed", 201
+            return "Firstname and lastname have been changed", 200
         elif firstname and lastname and category:
             user.firstname = firstname
             db.session.flush()
@@ -209,25 +211,25 @@ def update_user():
             db.session.flush()
             user.lastname = lastname
             db.session.commit()
-            return "Firstname, lastname and category have been changed", 201
+            return "Firstname, lastname and category have been changed", 200
         elif firstname and category:
             user.firstname = firstname
             db.session.flush()
             user.category = category
             db.session.commit()
-            return "Firstname and category have been changed", 201
+            return "Firstname and category have been changed", 200
         elif firstname and new_username:
             user.firstname = firstname
             db.session.flush()
             user.username = new_username
             db.session.commit()
-            return "Firstname and Username have been changed", 201
+            return "Firstname and Username have been changed", 200
         elif lastname and category:
             user.lastname = lastname
             db.session.flush()
             user.category = category
             db.session.commit()
-            return "Lastname and Category have been changed", 201
+            return "Lastname and Category have been changed", 200
         elif lastname and new_username and category:
             user.lastname = lastname
             db.session.flush()
@@ -235,30 +237,30 @@ def update_user():
             db.session.flush()
             user.category = category
             db.session.commit()
-            return "Lastname, Username and Category have been changed", 201
+            return "Lastname, Username and Category have been changed", 200
         elif new_username and category:
             user.username = new_username
             db.session.flush()
             user.category = category
             db.session.commit()
-            return "Username and Category have been changed", 201
+            return "Username and Category have been changed", 200
 
         elif firstname:
             user.firstname = firstname
             db.session.commit()
-            return 'The firstname has been changed', 201
+            return 'The firstname has been changed', 200
         elif lastname:
             user.lastname = lastname
             db.session.commit()
-            return 'The lastname has been changed', 201
+            return 'The lastname has been changed', 200
         elif category:
             user.category = category
             db.session.commit()
-            return 'The category has been changed', 201
+            return 'The category has been changed', 200
         elif new_username:
             user.username = new_username
             db.session.commit()
-            return 'Username updated!', 201
+            return 'Username updated!', 200
     return 'Invalid Method', 400
 
 
@@ -289,7 +291,7 @@ def logout(self):
         resp = User.decode_auth_token(auth_token)
         if not isinstance(resp, str):
             #mark the token as blacklisted
-            blacklist_token =Token(token=0)#blacklisted token
+            blacklist_token = Token(token=0) #blacklisted token
             try:
                 #insert the token
                 db.session.add(blacklist_token)
@@ -317,4 +319,34 @@ def logout(self):
             'message': 'Provide a valid auth token.'
         }
         return jsonify(response_object), 403
+
+
+@app.route('/user/single')
+def getSingleUser():
+    auth_header = request.headers.get('Authentication')
+    if auth_header:
+        try:
+            auth_token = auth_header.split(" ")[1]
+        except IndexError:
+            response_object = {
+                'status': 'fail',
+                'message': 'Bearer token malformed.'
+            }
+            return jsonify(response_object), 401
+    else:
+        auth_token = ' '
+    if auth_token:
+        resp = User.decode_auth_token(auth_token)
+        user = User.query.filter_by(user_id=resp).first()
+        if not user:
+            return jsonify({'message': 'No records of that user.'}), 422
+        user_dict = {
+            'firstname': user.firstname,
+            'lastname': user.lastname,
+            'username': user.username,
+            'category': user.category,
+            'email': user.email
+        }
+        return jsonify({'data': user_dict})
+
 
