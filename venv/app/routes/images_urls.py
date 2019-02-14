@@ -23,17 +23,29 @@ def upload_file():
                 image = request.files['image']
                 #if file not selected submit empty part without filename
                 if image.filename == '':
-                        return('No selected image')
+                        return 'No selected image'
                 if image and allowed_file(image.filename):
                         image_name = secure_filename(image.filename)
                         saved_path = os.path.join(app.config['UPLOAD_FOLDER'], image_name)
                         app.logger.info("saving {}".format(saved_path))
                         image.save(saved_path)
                         path = app.config['UPLOAD_FOLDER'] + image_name
-
-                        #complaint_id = 1
-                        #image_details = Image(path, complaint_id)
-                        #db.session.add(image_details)
-
+                        complaint_id = 4
+                        image_details = Image(path, complaint_id)
+                        db.session.add(image_details)
                         db.session.commit()
-                        return send_from_directory(app.config['UPLOAD_FOLDER'], image_name, as_attachment=True)
+                        response_object = {
+                                'path': path,
+                                'image-name': image_name
+                                }
+                        return jsonify(response_object)
+                else:
+                        return jsonify({'data': 'Error sending from directory'})
+
+
+@app.route('/ViewImages/<complaint_id>')
+def view_images(complaint_id):
+        images = Image.query.filter_by(complaint_id=complaint_id).all()
+        return send_from_directory(app.config['UPLOAD_FOLDER'], images.image_url, as_attachment=True)
+
+

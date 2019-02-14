@@ -38,7 +38,6 @@ def register():
 
 #Login Existing user
 @app.route('/login', methods=['POST'])
-@auth.verify_password
 def login():
     try:
         request_json = request.get_json()
@@ -50,7 +49,7 @@ def login():
 
         user = User.query.filter_by(username=username).first()
 
-        if  user and user.verify_password(password):
+        if user and user.verify_password(password):
             auth_token = user.encode_auth_token(user.user_id)
             if auth_token:
                 app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
