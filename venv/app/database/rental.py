@@ -1,5 +1,7 @@
-from routes import db
 from datetime import datetime
+import arrow
+from routes import db
+
 
 #rental Model
 class Rental(db.Model):
@@ -35,13 +37,15 @@ class Complaint(db.Model):
     #Relationship with images table
     images = db.relationship('Image', backref='complaints', lazy=True)
 
-    def __init__(self, date_posted, message, due_date, fixed_date, user_id, house_id):
-        self.date_posted = date_posted
+    def __init__(self, message, due_date, fixed_date, user_id, house_id):
+        self.date_posted = datetime.now()
         self.message = message
         self.due_date = due_date
         self.fixed_date = fixed_date
         self.user_id = user_id
         self.house_id = house_id
+
+
 
 
 #Images Model

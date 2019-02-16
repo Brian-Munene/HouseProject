@@ -1,5 +1,6 @@
 from flask import Flask, session, logging, request, json, jsonify
 from datetime import datetime
+import arrow
 #file imports
 from routes import app
 from routes import db
@@ -13,17 +14,17 @@ from database.house import House
 @app.route('/CreateComplaint', methods=['POST'])
 def create_complaint():
     request_json = request.get_json()
-    date_posted = request_json.get('date_posted')
     message = request_json.get('message')
     due_date = request_json.get('due_date')
     fixed_date = request_json.get('fixed_date')
     user_id = request_json.get('user_id')
     house_id = request_json.get('house_id')
 
-    complaint = Complaint(date_posted, message, due_date, fixed_date, user_id, house_id)
+    complaint = Complaint(message, due_date, fixed_date, user_id, house_id)
     db.session.add(complaint)
     db.session.commit()
-    return("Complaint added", "Success")
+    return "Complaint added", "Success"
+
 
 @app.route('/ViewComplaints', methods=['GET'])
 def view_complaints():
@@ -36,6 +37,7 @@ def view_complaints():
         return jsonify(response_object), 401
     complaintList = []
     for complaint in complaints:
+
         complaint_dict = {
             'date_posted': complaint.date_posted,
             'message': complaint.message,
@@ -103,7 +105,8 @@ def delete_complaint(id):
     db.session.commit()
     return "Complaint has been deleted!", "Success"
 
-@app.route('/BuildingComplaints', methods = ['POST'])
+
+@app.route('/BuildingComplaints', methods=['POST'])
 def building_complaints():
     if request.method == 'POST':
         request_json = request.get_json()
@@ -115,7 +118,7 @@ def building_complaints():
         complaints = Complaint.query.filter_by(house_id=house_id).all()
         complaintList = []
         for complaint in complaints:
-            complaint_dict ={
+            complaint_dict = {
                 'date_posted': complaint.date_posted,
                 'message': complaint.message,
                 'due_date': complaint.due_date,

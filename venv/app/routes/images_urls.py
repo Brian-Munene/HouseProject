@@ -1,5 +1,6 @@
-from flask import Flask, session, logging, send_from_directory, request, json, jsonify
+from flask import Flask, session, logging, send_from_directory, send_file, request, json, jsonify
 from werkzeug.utils import secure_filename
+import arrow
 import os
 #file imports
 from routes import app
@@ -25,13 +26,14 @@ def upload_file():
                 if image.filename == '':
                         return 'No selected image'
                 if image and allowed_file(image.filename):
-                        image_name = secure_filename(image.filename)
+                        a = arrow.utcnow().timestamp
+                        image_name = str(a) + ',' + secure_filename(image.filename)
                         saved_path = os.path.join(app.config['UPLOAD_FOLDER'], image_name)
                         app.logger.info("saving {}".format(saved_path))
                         image.save(saved_path)
                         path = app.config['UPLOAD_FOLDER'] + image_name
                         complaint_id = 4
-                        image_details = Image(path, complaint_id)
+                        image_details = Image(image_name, complaint_id)
                         db.session.add(image_details)
                         db.session.commit()
                         response_object = {
@@ -46,6 +48,19 @@ def upload_file():
 @app.route('/ViewImages/<complaint_id>')
 def view_images(complaint_id):
         images = Image.query.filter_by(complaint_id=complaint_id).all()
-        return send_from_directory(app.config['UPLOAD_FOLDER'], images.image_url, as_attachment=True)
+        images_list = []
+        for image in images:
+            filename = image.image_url
+            try:
+                send_from_directory("file:///C:/Users/Brian/Documents/Flask/HouseProject/venv/app/uploads/", filename, as_attachment=False)
+                # url = "file:///C:/Users/Brian/Documents/Flask/HouseProject/venv/app/uploads/" + filename
+                # print (url)
+            except Exception as e:
+                print(str(e))
+                images_list.append(filename)
+
+        return jsonify(images_list)
+
+
 
 
