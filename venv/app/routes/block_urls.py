@@ -3,8 +3,8 @@ from flask import Flask, session, logging, request, json, jsonify
 #file imports
 from routes import app
 from routes import db
-from database.house import House
-from database.house import Building
+from database.unit import Unit
+from database.block import Block
 
 #Create a building
 @app.route('/InsertBuilding', methods = ['GET', 'POST'])
@@ -16,15 +16,15 @@ def insert_building():
         number = request_json.get('Number')
         building_type = request_json.get('building_type')
 
-        building = Building(name, number, building_type)
+        building = Block(name, number, building_type)
         db.session.add(building)
         db.session.commit()
 
         return("Building successfully created", "Success")
-		
+
 @app.route('/ViewBuilding')
 def view_buildings():
-    buildings = Building.query.all()
+    buildings = Block.query.all()
     buildingList = []
     for building in buildings:
         buildings_dict = {

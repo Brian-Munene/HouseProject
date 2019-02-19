@@ -60,23 +60,20 @@ class User(db.Model):
     __tablename__ = 'users'
 
     user_id = db.Column(db.Integer, primary_key=True)
-    firstname = db.Column(db.String(75), nullable=False)
-    lastname = db.Column(db.String(75), nullable=False)
-    username = db.Column(db.String(75), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     category = db.Column(db.String(30), nullable=False)
-    tokens = db.relationship('Token', backref='users', lazy=True)
-    houses = db.relationship('House', backref='users', lazy=True)
-    rental = db.relationship('Rental', backref='users', lazy=True)
-    complaints = db.relationship('Complaint', backref='users', lazy=True)
+    account_status = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, firstname, lastname, username, category, email):
-        self.firstname = firstname
-        self.lastname = lastname
-        self.username = username
+    tokens = db.relationship('Token', backref='users', lazy=True)
+    # houses = db.relationship('House', backref='users', lazy=True)
+    # rental = db.relationship('Rental', backref='users', lazy=True)
+    # complaints = db.relationship('Complaint', backref='users', lazy=True)
+
+    def __init__(self, email, category,account_status):
         self.category = category
         self.email = email
+        self.account_status = account_status
 
 
 class Token(db.Model):

@@ -5,10 +5,11 @@ import arrow
 from routes import app
 from routes import db
 #from database.complaint import Complaint
-from database.rental import Complaint
+#from database.rental import Complaint
 from database.user import User
-from database.house import Building
-from database.house import House
+from database.block import Block
+from database.unit import Unit
+#from database.rental import Image
 
 #Create a complaint route
 @app.route('/CreateComplaint', methods=['POST'])
@@ -19,7 +20,6 @@ def create_complaint():
     fixed_date = request_json.get('fixed_date')
     user_id = request_json.get('user_id')
     house_id = request_json.get('house_id')
-
     complaint = Complaint(message, due_date, fixed_date, user_id, house_id)
     db.session.add(complaint)
     db.session.commit()
@@ -112,7 +112,7 @@ def building_complaints():
         request_json = request.get_json()
         building_id = request_json.get('building_id')
 
-        #building = Building.query.filter_by(building_id = building_id).first()
+
         house = House.query.filter_by(building_id=building_id).first()
         house_id = house.house_id
         complaints = Complaint.query.filter_by(house_id=house_id).all()

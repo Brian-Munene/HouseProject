@@ -1,12 +1,13 @@
 from flask import Flask, session, logging, send_from_directory, send_file, request, json, jsonify
+from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 import arrow
 import os
 #file imports
 from routes import app
 from routes import db
-from database.rental import Complaint
-from database.rental import Image
+from database.complaint import Complaint
+from database.images import Image
 
 ALLOWED_EXTENSIONS = set(['jpeg', 'png', 'jpg', 'gif'])
 
@@ -52,6 +53,10 @@ def view_images(complaint_id):
         for image in images:
             filename = image.image_url
             try:
+                fp = open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'rb')
+                file = FileStorage(fp)
+
+
                 send_from_directory("file:///C:/Users/Brian/Documents/Flask/HouseProject/venv/app/uploads/", filename, as_attachment=False)
                 # url = "file:///C:/Users/Brian/Documents/Flask/HouseProject/venv/app/uploads/" + filename
                 # print (url)
