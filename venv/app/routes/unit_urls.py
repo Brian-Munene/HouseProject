@@ -8,24 +8,24 @@ from database.unit import Unit
 from database.user import User
 
 
-@app.route('/InsertHouses', methods =['GET', 'POST'])
-def insert_houses():
-	#form = HousesForm(request.form)
+@app.route('/InsertUnit', methods=['GET', 'POST'])
+def insert_unit():
 	if request.method == 'POST':
 
 		request_json = request.get_json()
-		Number = request_json.get('Number')
-		Price = request_json.get('Price')
-		Type = request_json.get('Type')
-		user_id = request_json.get('user_id')  
-		building_id = request_json.get('building_id')
+		block_id = request_json.get('block_id')
+		unit_status = 6
 
-		house = House(Number, Price, Type, user_id, building_id)
-		db.session.add(house)
+		unit = Unit(block_id, unit_status)
+		db.session.add(unit)
 		db.session.commit()
+		response_object = {
+			'block_id': unit.block_id,
+			'unit_status': unit.unit_status
+		}
 
-		return ("Success",200)
-	return ("Invalid Method")
+		return jsonify(response_object), 201
+	return jsonify({'error': 'Invalid Method'})
 
 #View all houses
 

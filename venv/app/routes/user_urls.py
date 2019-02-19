@@ -7,6 +7,10 @@ from routes import app
 from routes import db
 from database.user import User
 from database.user import Token
+from database.block import Tenant
+from database.block import Caretaker
+from database.block import Landlord
+from database.block import PropertyManager
 
 auth = HTTPBasicAuth()
 
@@ -16,23 +20,74 @@ def register():
 
     if request.method == 'POST':
         request_json = request.get_json()
-
-        firstname = request_json.get('firstname')
-        lastname = request_json.get('lastname')
-        username = request_json.get('username')
+        email = request_json.get('email')
         password = request_json.get('password')
         category = request_json.get('category')
+        first_name = request_json.get('first_name')
+        last_name = request_json.get('last_name')
+        phone = request_json.get('PhoneNumber')
+        if email is None or password is None or category is None:
+            return "Fill all details", 400   # missing arguments
+        if User.query.filter_by(email=email).first() is not None:
+            return "User exists", 400   # existing user
+        if category == 'tenant':
+            tenant = Tenant(first_name, last_name, email, phone)
+            db.session.add(tenant)
+            db.session.commit()
 
-        if firstname is None or lastname is None or username is None or password is None or category is None:
-            return "Fill all details", 400 #missing arguments
-        if User.query.filter_by(username=username).first() is not None:
-            return "User exists", 400#existing user
-        user = User(firstname, lastname, username, category)
-        user.hash_password(password)
-        db.session.add(user)
-        db.session.commit()
+            account_status = 3
+            user = User(email, category, account_status)
+            user.hash_password(password)
+            db.session.add(user)
+            db.session.commit()
+            response_object = {'message': "Your Property manager account has been created.",
+                               'email': user.email,
+                               'account_status': 'active'}
+            return jsonify(response_object), 201
+        elif category == 'landlord':
+            landlord = Landlord(first_name, last_name, email, phone)
+            db.session.add(landlord)
+            db.session.commit()
 
-        return jsonify({'username': user.username}), 201
+            account_status = 3
+            user = User(email, category, account_status)
+            user.hash_password(password)
+            db.session.add(user)
+            db.session.commit()
+            response_object = {'message': "Your Property manager account has been created.",
+                               'email': user.email,
+                               'account_status': 'active'}
+            return jsonify(response_object), 201
+        elif category == 'caretaker':
+            caretaker = Caretaker(first_name, last_name, email, phone)
+            db.session.add(caretaker)
+            db.session.commit()
+
+            account_status = 3
+            user = User(email, category, account_status)
+            user.hash_password(password)
+            db.session.add(user)
+            db.session.commit()
+            response_object = {'message': "Your Property manager account has been created.",
+                               'email': user.email,
+                               'account_status': 'active'}
+            return jsonify(response_object), 201
+        elif category == 'property manager':
+            manager = PropertyManager(first_name, last_name, email, phone)
+            db.session.add(manager)
+            db.session.commit()
+
+            account_status = 3
+            user = User(email, category, account_status)
+            user.hash_password(password)
+            db.session.add(user)
+            db.session.commit()
+            response_object = {'message': "Your Property manager account has been created.",
+                               'email': user.email,
+                               'account_status': 'active'}
+            return jsonify(response_object), 201
+        else:
+            return jsonify({'error': 'Not a valid category'})
     return "Invalid Method", 400
 
 
@@ -42,13 +97,12 @@ def login():
     try:
         request_json = request.get_json()
 
-        username = request_json.get('username')
+        email = request_json.get('email')
         password = request_json.get('password')
-        if username is None or password is None:
-            return "Missing arguments", 400 #missing arguments
+        if email is None or password is None:
+            return "Missing arguments", 400   # missing arguments
 
-        user = User.query.filter_by(username=username).first()
-
+        user = User.query.filter_by(email=email, account_status=3).first()
         if user and user.verify_password(password):
             auth_token = user.encode_auth_token(user.user_id)
             if auth_token:
@@ -58,29 +112,29 @@ def login():
                     'status': 'success',
                     'public_id': user.user_id,
                     'user_type': user.category,
-                    'firstname': user.firstname,
-                    'lastname': user.lastname,
-                    'username': user.username
+                    'email': user.email
                 }
                 return jsonify(response_object), 200
             else:
-                app.logger.warning('{0} tried to log in at {1}'.format(username, datetime.now()))
+                app.logger.warning('{0} tried to log in at {1}'.format(email, datetime.now()))
                 response_object = {
                     'message': 'Incorrect username or password'
                 }
                 return jsonify(response_object), 422
         else:
-            app.logger.warning('{0} tried to log in at {1}'.format(username, datetime.now()))
+            app.logger.warning('{0} tried to log in at {1}'.format(email, datetime.now()))
 
             response_object = {
-                    'message': 'Incorrect username or password'
-                }
+                'message': 'Incorrect username or password'
+            }
             return jsonify(response_object), 422
+
+
     except(Exception, NameError, TypeError, RuntimeError, ValueError) as identifier:
         response_object = {
             'status': str(identifier),
             'message': 'Try again @login',
-            'user': username
+            'user': email
         }
         return jsonify(response_object), 500
     except NameError as name_identifier:
@@ -88,7 +142,7 @@ def login():
             'status': str(name_identifier),
             'message': 'Try again @login',
             'error': 'Name',
-            'username': username
+            'username': email
         }
         return jsonify(response_object), 500
     except TypeError as type_identifier:
@@ -96,7 +150,7 @@ def login():
             'status': str(type_identifier),
             'message': 'Try again @login',
             'error': 'Type',
-            'username': username
+            'username': email
         }
         return jsonify(response_object), 500
     except RuntimeError as run_identifier:
@@ -104,7 +158,7 @@ def login():
             'status': str(run_identifier),
             'message': 'Try again @login',
             'error': 'Runtime',
-            'username': username
+            'username': email
         }
         return jsonify(response_object), 500
     except ValueError as val_identifier:
@@ -112,7 +166,7 @@ def login():
             'status': str(val_identifier),
             'message': 'Try again @login',
             'error': 'Value',
-            'username': username
+            'username': email
         }
         return jsonify(response_object), 500
     except Exception as exc_identifier:
@@ -120,7 +174,7 @@ def login():
             'status': str(exc_identifier),
             'message': 'Try again @login',
             'error': 'Exception',
-            'username': username
+            'username': email
         }
         return jsonify(response_object), 500
 
@@ -128,18 +182,16 @@ def login():
 #View all users
 @app.route('/users')
 def users():
-    users = User.query.all()
-
+    users = User.query.filter_by(account_status=3).all()
     usersList = []
     for user in users:
         users_dict = {
-                'firstname': user.firstname,
-                'lastname': user.lastname,
-                'username': user.username,
-                'category': user.category
+                'email': user.email,
+                'category': user.category,
+                'account_status': 'Active'
                 }
         usersList.append(users_dict)
-    return jsonify({'data' :usersList})
+    return jsonify({'data': usersList})
     
 
 #View a single user
@@ -148,13 +200,17 @@ def users():
 def user(id):
 
     user = User.query.get(id)
-    user_dict = {
-                'firstname': user.firstname,
-                'lastname': user.lastname,
-                'username': user.username,
-                'category': user.category
-                }
-    return jsonify({'data': user_dict})
+    if user.account_status == 3:
+        status = 'Active'
+        user_dict = {
+            'email': user.email,
+            'category': user.category,
+            'account_status': status
+        }
+        return jsonify({'data': user_dict})
+    else:
+        return jsonify({'message': 'The account is inactive'}), 500
+
 
 #Delete a user
 
@@ -163,8 +219,8 @@ def user(id):
 def delete_user():
     if request.method == 'POST':
         request_json = request.get_json()
-        username = request_json.get('username')
-        user = User.query.filter_by(username=username).first()
+        email = request_json.get('email')
+        user = User.query.filter_by(email=email).first()
         db.session.delete(user)
         db.session.commit()
 
@@ -179,101 +235,38 @@ def update_user():
     if request.method == 'POST':
         request_json = request.get_json()
         
-        current_username = request_json.get('username')
-        firstname = request_json.get('firstname')
-        lastname = request_json.get('lastname')
-        new_username = request_json.get('new_username')
+        current_email = request_json.get('email')
+        new_email = request_json.get('new_email')
         category = request_json.get('category')
         
-        user = User.query.filter_by(username=current_username).first()
-        
-        if firstname and lastname and category and new_username: 
-            user.firstname = firstname 
-            db.session.flush() 
-            user.lastname = lastname 
-            db.session.flush() 
-            user.username = new_username 
-            db.session.flush() 
-            user.category = category 
-            db.session.commit() 
-            return "Firstname, Lastname, Username and Category have been changed", 200
-        elif firstname and lastname:
-            user.firstname = firstname
-            db.session.flush()
-            user.lastname = lastname
-            db.session.commit()
-            return "Firstname and lastname have been changed", 200
-        elif firstname and lastname and category:
-            user.firstname = firstname
-            db.session.flush()
-            user.category = category
-            db.session.flush()
-            user.lastname = lastname
-            db.session.commit()
-            return "Firstname, lastname and category have been changed", 200
-        elif firstname and category:
-            user.firstname = firstname
+        user = User.query.filter_by(email=current_email, account_status=3).first()
+        if new_email and category:
+            user.email = new_email
             db.session.flush()
             user.category = category
             db.session.commit()
-            return "Firstname and category have been changed", 200
-        elif firstname and new_username:
-            user.firstname = firstname
-            db.session.flush()
-            user.username = new_username
-            db.session.commit()
-            return "Firstname and Username have been changed", 200
-        elif lastname and category:
-            user.lastname = lastname
-            db.session.flush()
-            user.category = category
-            db.session.commit()
-            return "Lastname and Category have been changed", 200
-        elif lastname and new_username and category:
-            user.lastname = lastname
-            db.session.flush()
-            user.username = new_username
-            db.session.flush()
-            user.category = category
-            db.session.commit()
-            return "Lastname, Username and Category have been changed", 200
-        elif new_username and category:
-            user.username = new_username
-            db.session.flush()
-            user.category = category
-            db.session.commit()
-            return "Username and Category have been changed", 200
-
-        elif firstname:
-            user.firstname = firstname
-            db.session.commit()
-            return 'The firstname has been changed', 200
-        elif lastname:
-            user.lastname = lastname
-            db.session.commit()
-            return 'The lastname has been changed', 200
+            return "Email and Category have been changed", 200
         elif category:
             user.category = category
             db.session.commit()
             return 'The category has been changed', 200
-        elif new_username:
-            user.username = new_username
+        elif new_email:
+            user.email = new_email
             db.session.commit()
-            return 'Username updated!', 200
+            return 'Email updated!', 200
     return 'Invalid Method', 400
 
 
 @app.route('/SingleCategoryUser/<string:category>/')
 def single_category_user(category):
-    users = User.query.filter_by(category=category)
+    users = User.query.filter_by(category=category, account_status=3)
     usersList = []
     for user in users:
         users_dict = {
-                'firstname': user.firstname,
-                'lastname': user.lastname,
-                'username': user.username,
-                'category': user.category
-                }
+            'email': user.email,
+            'category': user.category,
+            'account_status': 'Active'
+        }
         usersList.append(users_dict)
     return jsonify({'data': usersList})
 
@@ -340,9 +333,6 @@ def getSingleUser():
         if not user:
             return jsonify({'message': 'No records of that user.'}), 422
         user_dict = {
-            'firstname': user.firstname,
-            'lastname': user.lastname,
-            'username': user.username,
             'category': user.category,
             'email': user.email
         }

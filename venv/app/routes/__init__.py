@@ -21,6 +21,5 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 
 
-
 #Import routes
-from routes import base_urls, unit_urls, rental_urls, user_urls,block_urls,complaint_urls, images_urls
+from routes import base_urls, unit_urls, rental_urls, user_urls, block_urls, complaint_urls, images_urls

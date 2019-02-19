@@ -70,7 +70,7 @@ class User(db.Model):
     # rental = db.relationship('Rental', backref='users', lazy=True)
     # complaints = db.relationship('Complaint', backref='users', lazy=True)
 
-    def __init__(self, email, category,account_status):
+    def __init__(self, email, category, account_status):
         self.category = category
         self.email = email
         self.account_status = account_status
