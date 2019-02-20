@@ -5,83 +5,81 @@ from routes import app
 from routes import db
 from database.unit import Unit
 from database.block import Block
+from database.block import Property
 
-#Create a building
-@app.route('/InsertBuilding', methods = ['GET', 'POST'])
-def insert_building():
+#Create a block
+@app.route('/InsertBlock', methods=['GET', 'POST'])
+def insert_block():
     if request.method == 'POST':
         request_json = request.get_json()
-
-        name = request_json.get('Name')
-        number = request_json.get('Number')
-        building_type = request_json.get('building_type')
-
-        building = Block(name, number, building_type)
-        db.session.add(building)
+        property_id = request_json.get('property_id')
+        block_name = request_json.get('block_name')
+        if property_id is None or block_name is None:
+            return jsonify({'message': 'Fields cannot be null'}), 400
+        elif not Property.query.get(property_id):
+            return jsonify({'message': 'property does not exist'}), 400
+        block = Block(property_id, block_name)
+        db.session.add(block)
         db.session.commit()
-
-        return("Building successfully created", "Success")
-
-@app.route('/ViewBuilding')
-def view_buildings():
-    buildings = Block.query.all()
-    buildingList = []
-    for building in buildings:
-        buildings_dict = {
-            'Name': building.building_name,
-            'Number': building.building_number,
-            'Type': building.building_type
+        response_object = {
+            'message': 'block successfully created',
+            'block_name': block.block_name,
+            'property_id': block.property_id,
+            'block_id': block.block_id
         }
-        buildingList.append(buildings_dict)
-    return jsonify({'data': buildingList})
+        return jsonify(response_object), 201
 
-@app.route('/ViewSpecificBuilding', methods = ['GET', 'POST'])
-def view_specific_building():
+
+@app.route('/ViewBlocks')
+def view_blocks():
+    blocks = Block.query.all()
+    if blocks:
+        blocksList = []
+        for block in blocks:
+            blocks_dict = {
+                'property_id': block.property_id,
+                'block_name': block.block_name
+            }
+            blocksList.append(blocks_dict)
+        return jsonify({'data': blocksList})
+    else:
+        return jsonify({'message': 'No blocks available'}), 200
+
+
+@app.route('/ViewSpecificBlock/<id>/')
+def view_specific_block(id):
+    block = Block.query.get(id)
+    if block:
+        block_dict = {
+            'property_id': block.property_id,
+            'block_name': block.block_name
+        }
+        return jsonify({'data': block_dict})
+    else:
+        return jsonify({'message': 'No such block'}), 400
+
+
+@app.route('/UpdateBlock/<id>/', methods=['POST', 'GET'])
+def update_block(id):
     if request.method == 'POST':
         request_json = request.get_json()
-        number = request_json.get('Number')
-
-        building = Building.query.filter_by(building_number = number).first()
-        building_dict = {
-            'Name': building.building_name,
-            'Number': building.building_number,
-            'Type': building.building_type
+        new_name = request_json.get('new_block_name')
+        block = Block.query.get(id)
+        block.block_name = new_name
+        db.session.commit()
+        response_object = {
+            'status': 'success',
+            "new_name": block.block_name
         }
-        return jsonify({'data': building_dict})
-    return('Method not Allowed')
+        return jsonify(response_object), 200
+    return jsonify({'message': 'Method not allowed.'}), 405
 
-@app.route('/UpdateBuilding', methods = ['POST', 'GET'])
-def update_building():
-    if request.method == 'POST':
-        request_json = request.get_json()
-        number = request_json.get('Number')
-        new_name = request_json.get('new_name')
-        new_type = request_json.get('new_type')
-        building = Building.query.filter_by(building_number = number).first()
-        
-        if new_name and new_type:
-            building.building_name = new_name
-            db.session.flush()
-            building.building_type = new_type
-            db.session.commit()
-            return("Building name and type have been changed", "Success")
-        elif new_name:
-            building.building_name = new_name
-            db.session.commit()
-            return ('The name has been changed', "success")
-        elif new_type:
-            building.building_type = new_type
-            db.session.commit()
-            return('The type has been changed', "Success")
-    return("Method not allowed")
 
-@app.route('/DeleteBuilding', methods=['POST'])
-def delete_building():
-    request_json = request.get_json()
-    number = request_json.get('Number')
-    building = Building.query.filter_by(building_number = number).first()
-    db.session.delete(building)
+@app.route('/DeleteBlock/<id>/', methods=['DELETE'])
+def delete_block(id):
+    block = Block.query.get(id)
+    db.session.delete(block)
     db.session.commit()
-    return('Building has been deleted', 'Success')
+    return jsonify({'message': 'block has been deleted'}), 200
 
 

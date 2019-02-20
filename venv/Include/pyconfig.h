@@ -143,9 +143,9 @@ WIN32 is still required for the locale module.
 #define Py_WINVER 0x0600 /* _WIN32_WINNT_VISTA */
 #define Py_NTDDI NTDDI_VISTA
 
-/* We only set these values when building Python - we don't want to force
+/* We only set these values when block Python - we don't want to force
    these values on extensions, as that will affect the prototypes and
-   structures exposed in the Windows headers. Even when building Python, we
+   structures exposed in the Windows headers. Even when block Python, we
    allow a single source file to override this - they may need access to
    structures etc so it can optionally use new Windows features if it
    determines at runtime they are available.
@@ -284,7 +284,7 @@ Py_NO_ENABLE_SHARED to find out.  Also support MS_NO_COREDLL for b/w compat */
 
 /* For an MSVC DLL, we can nominate the .lib files used by extensions */
 #ifdef MS_COREDLL
-#	ifndef Py_BUILD_CORE /* not building the core - must be an ext */
+#	ifndef Py_BUILD_CORE /* not block the core - must be an ext */
 #		if defined(_MSC_VER)
 			/* So MSVC users need not specify the .lib file in
 			their Makefile (other compilers are generally

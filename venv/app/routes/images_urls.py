@@ -57,8 +57,8 @@ def view_images(complaint_id):
                 file = FileStorage(fp)
 
 
-                send_from_directory("file:///C:/Users/Brian/Documents/Flask/HouseProject/venv/app/uploads/", filename, as_attachment=False)
-                # url = "file:///C:/Users/Brian/Documents/Flask/HouseProject/venv/app/uploads/" + filename
+                send_from_directory("file:///C:/Users/Brian/Documents/Flask/BlockProject/venv/app/uploads/", filename, as_attachment=False)
+                # url = "file:///C:/Users/Brian/Documents/Flask/BlockProject/venv/app/uploads/" + filename
                 # print (url)
             except Exception as e:
                 print(str(e))

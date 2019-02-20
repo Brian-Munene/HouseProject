@@ -5,16 +5,15 @@ class Block(db.Model):
     __tablename__ = 'blocks'
 
     block_id = db.Column(db.Integer, primary_key=True)
-    property_id = db.Column(db.Integer, db.ForeignKey('property.property_id'), nullable=True)
+    property_id = db.Column(db.Integer, db.ForeignKey('property.property_id'), nullable=False)
     block_name = db.Column(db.String(35), nullable=False)
 
     # Relationships
     units = db.relationship('Unit', backref='blocks', lazy=True)
 
-    def __init__(self, building_name, building_number, building_type):
-        self.building_name = building_name
-        self.building_number = building_number
-        self.building_type = building_type
+    def __init__(self, property_id, block_name):
+        self.property_id = property_id
+        self.block_name = block_name
 
 
 #Property Model
@@ -30,8 +29,8 @@ class Property(db.Model):
     # Relationships
     blocks = db.relationship('Block', backref='property', lazy=True)
 
-    def __init__(self, property_name, property_manager_id, landlord_id):
-        self.property_manager_id = property_manager_id
+    def __init__(self, property_name, manager_id, landlord_id):
+        self.manager_id = manager_id
         self.property_name = property_name
         self.landlord_id = landlord_id
 
@@ -88,7 +87,7 @@ class Caretaker(db.Model):
     first_name = db.Column(db.String(75), nullable=False)
     last_name = db.Column(db.String(75), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
-    phone = db.Column(db.Integer,nullable=False, unique=True)
+    phone = db.Column(db.Integer, nullable=False, unique=True)
 
     def __init__(self, property_id, first_name, last_name, email, phone):
         self.property_id = property_id

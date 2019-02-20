@@ -27,9 +27,9 @@ def register():
         last_name = request_json.get('last_name')
         phone = request_json.get('PhoneNumber')
         if email is None or password is None or category is None:
-            return "Fill all details", 400   # missing arguments
+            return jsonify({'message': 'Fill all details'}), 400   # missing arguments
         if User.query.filter_by(email=email).first() is not None:
-            return "User exists", 400   # existing user
+            return jsonify({'message': 'User exists'}), 400   # existing user
         if category == 'tenant':
             tenant = Tenant(first_name, last_name, email, phone)
             db.session.add(tenant)
@@ -59,7 +59,8 @@ def register():
                                'account_status': 'active'}
             return jsonify(response_object), 201
         elif category == 'caretaker':
-            caretaker = Caretaker(first_name, last_name, email, phone)
+            property_id = request_json.get('property_id')
+            caretaker = Caretaker(property_id, first_name, last_name, email, phone)
             db.session.add(caretaker)
             db.session.commit()
 
@@ -106,15 +107,61 @@ def login():
         if user and user.verify_password(password):
             auth_token = user.encode_auth_token(user.user_id)
             if auth_token:
-                app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
-                response_object = {
-                    'message': 'Successfully Logged in.',
-                    'status': 'success',
-                    'public_id': user.user_id,
-                    'user_type': user.category,
-                    'email': user.email
-                }
-                return jsonify(response_object), 200
+                if user.category == 'tenant':
+                    tenant = Tenant.query.filter_by(email=email).first()
+                    app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+                    response_object = {
+                        'message': 'Successfully Logged in.',
+                        'status': 'success',
+                        'public_id': user.user_id,
+                        'user_type': user.category,
+                        'firstname': tenant.first_name,
+                        'lastname': tenant.last_name,
+                        'email': user.email
+                    }
+                    return jsonify(response_object), 200
+                elif user.category == 'landlord':
+                    landlord = Landlord.query.filter_by(email=email).first()
+                    app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+                    response_object = {
+                        'message': 'Successfully Logged in.',
+                        'status': 'success',
+                        'public_id': user.user_id,
+                        'user_type': user.category,
+                        'firstname': landlord.first_name,
+                        'lastname': landlord.last_name,
+                        'email': user.email
+                    }
+                    return jsonify(response_object), 200
+                elif user.category == 'caretaker':
+                    caretaker = Caretaker.query.filter_by(email=email).first()
+                    app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+                    response_object = {
+                        'message': 'Successfully Logged in.',
+                        'status': 'success',
+                        'public_id': user.user_id,
+                        'user_type': user.category,
+                        'firstname': caretaker.first_name,
+                        'lastname': caretaker.last_name,
+                        'email': user.email
+                    }
+                    return jsonify(response_object), 200
+                elif user.category == "property manager":
+                    manager = PropertyManager.query.filter_by(email=email).first()
+                    app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+                    response_object = {
+                        'message': 'Successfully Logged in.',
+                        'status': 'success',
+                        'public_id': user.user_id,
+                        'user_type': user.category,
+                        'firstname': manager.first_name,
+                        'lastname': manager.last_name,
+                        'email': user.email
+                    }
+                    return jsonify(response_object), 200
+                else:
+                    return jsonify({'message': 'User details are unavailable'})
+
             else:
                 app.logger.warning('{0} tried to log in at {1}'.format(email, datetime.now()))
                 response_object = {
@@ -237,23 +284,38 @@ def update_user():
         
         current_email = request_json.get('email')
         new_email = request_json.get('new_email')
-        category = request_json.get('category')
         
         user = User.query.filter_by(email=current_email, account_status=3).first()
-        if new_email and category:
-            user.email = new_email
-            db.session.flush()
-            user.category = category
-            db.session.commit()
-            return "Email and Category have been changed", 200
-        elif category:
-            user.category = category
-            db.session.commit()
-            return 'The category has been changed', 200
-        elif new_email:
-            user.email = new_email
-            db.session.commit()
-            return 'Email updated!', 200
+        if new_email:
+            if user.category == 'tenant':
+                tenant = Tenant.query.filter_by(email=current_email).first()
+                tenant.email = new_email
+                db.session.flush()
+                user.email = new_email
+                db.session.commit()
+                return jsonify({'message': 'Email updated!'}), 200
+            elif user.category == 'caretaker':
+                caretaker = Caretaker.query.filter_by(email=current_email).first()
+                caretaker.email = new_email
+                db.session.flush()
+                user.email = new_email
+                db.session.commit()
+                return jsonify({'message': 'Email updated!'}), 200
+            elif user.category == 'property manager':
+                manager = PropertyManager.query.filter_by(email=current_email).first()
+                manager.email = new_email
+                db.session.flush()
+                user.email = new_email
+                db.session.commit()
+                return jsonify({'message': 'Email updated!'}), 200
+            elif user.category == 'landlord':
+                landlord = Landlord.query.filter_by(email=current_email).first()
+                landlord.email = new_email
+                db.session.flush()
+                user.email = new_email
+                db.session.commit()
+                return jsonify({'message': 'Email updated!'}), 200
+
     return 'Invalid Method', 400
 
 

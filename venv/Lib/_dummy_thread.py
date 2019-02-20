@@ -19,7 +19,7 @@ __all__ = ['error', 'start_new_thread', 'exit', 'get_ident', 'allocate_lock',
 # A dummy value
 TIMEOUT_MAX = 2**31
 
-# NOTE: this module can be imported early in the extension building process,
+# NOTE: this module can be imported early in the extension block process,
 # and so top level imports of other modules should be avoided.  Instead, all
 # imports are done when needed on a function-by-function basis.  Since threads
 # are disabled, the import lock should not be an issue anyway (??).

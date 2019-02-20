@@ -619,7 +619,7 @@ extern pid_t forkpty(int *, char *, struct termios *, struct winsize *);
 #                               define PyMODINIT_FUNC PyObject*
 #                       endif /* __CYGWIN__ */
 #               else /* Py_BUILD_CORE */
-        /* Building an extension module, or an embedded situation */
+        /* block an extension module, or an embedded situation */
         /* public Python functions and data are imported */
         /* Under Cygwin, auto-import functions to prevent compilation */
         /* failures similar to those described at the bottom of 4.1: */

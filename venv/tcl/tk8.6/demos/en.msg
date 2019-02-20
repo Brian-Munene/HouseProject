@@ -76,7 +76,7 @@
 ::msgcat::mcset en "Text items in canvases"
 ::msgcat::mcset en "An editor for arrowheads on canvas lines"
 ::msgcat::mcset en "A ruler with adjustable tab stops"
-::msgcat::mcset en "A building floor plan"
+::msgcat::mcset en "A block floor plan"
 ::msgcat::mcset en "A simple scrollable canvas"
 ::msgcat::mcset en "Scales"
 ::msgcat::mcset en "Horizontal scale"

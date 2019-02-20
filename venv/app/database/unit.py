@@ -13,14 +13,14 @@ class Block(db.Model):
     block_name = db.Column(db.String(35), nullable=False)
     units = db.relationship('Unit', backref='units', lazy=True)
     
-    def __init__(self, building_name, building_number, building_type):
-        self.building_name = building_name
-        self.building_number = building_number
-        self.building_type = building_type
+    def __init__(self, block_name, block_number, block_type):
+        self.block_name = block_name
+        self.block_number = block_number
+        self.block_type = block_type
 '''
 
 
-#House Model
+#Block Model
 class Unit(db.Model):
 
     __tablename__ = 'units'

@@ -185,7 +185,7 @@ def setitem(a, b, c):
 def length_hint(obj, default=0):
     """
     Return an estimate of the number of items in obj.
-    This is useful for presizing containers when building from an iterable.
+    This is useful for presizing containers when block from an iterable.
 
     If the object supports len(), the result will be exact. Otherwise, it may
     over- or under-estimate by an arbitrary amount. The result will be an

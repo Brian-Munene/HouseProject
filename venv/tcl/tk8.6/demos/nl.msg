@@ -96,7 +96,7 @@
     "Editor voor de vorm van de pijl (begin/eind van een lijn)"
 ::msgcat::mcset nl "A ruler with adjustable tab stops" \
     "Een meetlat met aanpasbare ruiters"
-::msgcat::mcset nl "A building floor plan"     "Plattegrond van een gebouw"
+::msgcat::mcset nl "A block floor plan"     "Plattegrond van een gebouw"
 ::msgcat::mcset nl "A simple scrollable canvas" "Een schuifbaar canvas"
 
 ::msgcat::mcset nl "Scales" "Schaalverdelingen"

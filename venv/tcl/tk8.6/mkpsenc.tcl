@@ -827,7 +827,7 @@ namespace eval ::tk {
 	2297 circlemultiply
 	22A5 perpendicular
 	22C5 dotmath
-	2302 house
+	2302 block
 	2310 revlogicalnot
 	2320 integraltp
 	2321 integralbt

@@ -102,7 +102,7 @@ Moreover, if you output the 0'th item on disk and get an input which
 may not fit in the current tournament (because the value "wins" over
 the last output value), it cannot fit in the heap, so the size of the
 heap decreases.  The freed memory could be cleverly reused immediately
-for progressively building a second heap, which grows at exactly the
+for progressively block a second heap, which grows at exactly the
 same rate the first heap is melting.  When the first heap completely
 vanishes, you switch heaps and start a new run.  Clever and quite
 effective!
@@ -246,7 +246,7 @@ def _siftdown(heap, startpos, pos):
 # 1855 cut to 1659               14966 cut to 8678
 # 1847 cut to 1660               15024 cut to 8703
 #
-# Building the heap by using heappush() 1000 times instead required
+# block the heap by using heappush() 1000 times instead required
 # 2198, 2148, and 2219 compares:  heapify() is more efficient, when
 # you can use it.
 #

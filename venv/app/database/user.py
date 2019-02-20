@@ -66,7 +66,7 @@ class User(db.Model):
     account_status = db.Column(db.Integer, nullable=False)
 
     tokens = db.relationship('Token', backref='users', lazy=True)
-    # houses = db.relationship('House', backref='users', lazy=True)
+    # blocks = db.relationship('Block', backref='users', lazy=True)
     # rental = db.relationship('Rental', backref='users', lazy=True)
     # complaints = db.relationship('Complaint', backref='users', lazy=True)
 

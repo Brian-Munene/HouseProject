@@ -17,10 +17,10 @@ def insert_rentals():
 		tenant = request_json.get('tenant_name')
 		amount = request_json.get('amount_paid')
 		paid_at = request_json.get('paid_at')
-		house_id = request_json.get('house_id')
+		block_id = request_json.get('block_id')
 		user_id = request_json.get('user_id')
 
-		rental = Rental(tenant, amount, paid_at, user_id, house_id)
+		rental = Rental(tenant, amount, paid_at, user_id, block_id)
 		db.session.add(rental)
 		db.session.commit()
 

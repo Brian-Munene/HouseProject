@@ -5,11 +5,12 @@ import arrow
 from routes import app
 from routes import db
 #from database.complaint import Complaint
-#from database.rental import Complaint
+from database.complaint import Complaint
 from database.user import User
 from database.block import Block
 from database.unit import Unit
 #from database.rental import Image
+
 
 #Create a complaint route
 @app.route('/CreateComplaint', methods=['POST'])
@@ -18,12 +19,21 @@ def create_complaint():
     message = request_json.get('message')
     due_date = request_json.get('due_date')
     fixed_date = request_json.get('fixed_date')
-    user_id = request_json.get('user_id')
-    house_id = request_json.get('house_id')
-    complaint = Complaint(message, due_date, fixed_date, user_id, house_id)
+    unit_id = request_json.get('unit_id')
+    if not Unit.query.get(unit_id):
+        return jsonify({'message': 'Unit does not exist.'}), 400
+    complaint = Complaint(message, due_date, fixed_date, unit_id)
     db.session.add(complaint)
     db.session.commit()
-    return "Complaint added", "Success"
+    response_object = {
+        'status': 'Success',
+        'date_posted': complaint.date_posted,
+        'message': complaint.message,
+        'due_date': complaint.due_date,
+        'fixed_date': complaint.fixed_date,
+        'unit_id': complaint.unit_id
+    }
+    return jsonify(response_object), 201
 
 
 @app.route('/ViewComplaints', methods=['GET'])
@@ -63,7 +73,8 @@ def view_single_complaint(id):
             'date_posted': complaint.date_posted,
             'message': complaint.message,
             'due_date': complaint.due_date,
-            'fixed_date': complaint.fixed_date
+            'fixed_date': complaint.fixed_date,
+            'unit_id': complaint.unit_id
         }
     return jsonify({'data': complaint_dict})
 
@@ -98,7 +109,7 @@ def update_complant():
         return "Complaint has been fixed!", "success"
 
 
-@app.route('/DeleteComplaint/<string:id>/')
+@app.route('/DeleteComplaint/<string:id>/', methods=['DELETE'])
 def delete_complaint(id):
     complaint = Complaint.query.get(id)
     db.session.delete(complaint)
@@ -106,26 +117,28 @@ def delete_complaint(id):
     return "Complaint has been deleted!", "Success"
 
 
-@app.route('/BuildingComplaints', methods=['POST'])
-def building_complaints():
-    if request.method == 'POST':
-        request_json = request.get_json()
-        building_id = request_json.get('building_id')
-
-
-        house = House.query.filter_by(building_id=building_id).first()
-        house_id = house.house_id
-        complaints = Complaint.query.filter_by(house_id=house_id).all()
-        complaintList = []
-        for complaint in complaints:
-            complaint_dict = {
-                'date_posted': complaint.date_posted,
-                'message': complaint.message,
-                'due_date': complaint.due_date,
-                'fixed_date': complaint.fixed_date
-            }
-            complaintList.append(complaint_dict)
+@app.route('/UnitComplaints/<id>')
+def unit_complaints(id):
+    complaints = Complaint.query.filter_by(unit_id=id).all()
+    complaintList = []
+    for complaint in complaints:
+        complaint_dict = {
+            'date_posted': complaint.date_posted,
+            'message': complaint.message,
+            'due_date': complaint.due_date,
+            'fixed_date': complaint.fixed_date
+        }
+        complaintList.append(complaint_dict)
     return jsonify({'data': complaintList})
+
+
+#Block Complaints
+@app.route('/BlockComplaints/<id>')
+def block_complaints(id):
+    units = db.session.query(Block).join(Unit).filter_by(block_id=id).all()
+    return units
+
+
 
 
 

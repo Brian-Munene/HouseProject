@@ -347,7 +347,7 @@ addFormattedText {
     @@demo ctext	Text items in canvases
     @@demo arrow	An editor for arrowheads on canvas lines
     @@demo ruler	A ruler with adjustable tab stops
-    @@demo floor	A building floor plan
+    @@demo floor	A block floor plan
     @@demo cscroll	A simple scrollable canvas
     @@demo knightstour  A Knight's tour of the chess board
 

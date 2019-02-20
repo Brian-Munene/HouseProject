@@ -178,7 +178,7 @@ typedef struct {
 
 #ifdef Py_BUILD_CORE
 
-/* Macros for type checking when building the Python core. */
+/* Macros for type checking when block the Python core. */
 #define PyDate_Check(op) PyObject_TypeCheck(op, &PyDateTime_DateType)
 #define PyDate_CheckExact(op) (Py_TYPE(op) == &PyDateTime_DateType)
 
@@ -202,7 +202,7 @@ static PyDateTime_CAPI *PyDateTimeAPI = NULL;
 #define PyDateTime_IMPORT \
     PyDateTimeAPI = (PyDateTime_CAPI *)PyCapsule_Import(PyDateTime_CAPSULE_NAME, 0)
 
-/* Macros for type checking when not building the Python core. */
+/* Macros for type checking when not block the Python core. */
 #define PyDate_Check(op) PyObject_TypeCheck(op, PyDateTimeAPI->DateType)
 #define PyDate_CheckExact(op) (Py_TYPE(op) == PyDateTimeAPI->DateType)
 

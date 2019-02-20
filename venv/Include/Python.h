@@ -45,7 +45,7 @@
 #endif
 
 /* CAUTION:  Build setups should ensure that NDEBUG is defined on the
- * compiler command line when building Python in release mode; else
+ * compiler command line when block Python in release mode; else
  * assert() calls won't be removed.
  */
 #include <assert.h>

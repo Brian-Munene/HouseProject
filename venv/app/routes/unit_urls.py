@@ -20,6 +20,7 @@ def insert_unit():
 		db.session.add(unit)
 		db.session.commit()
 		response_object = {
+			'unit_id': unit.unit_id,
 			'block_id': unit.block_id,
 			'unit_status': unit.unit_status
 		}
@@ -27,97 +28,55 @@ def insert_unit():
 		return jsonify(response_object), 201
 	return jsonify({'error': 'Invalid Method'})
 
-#View all houses
 
-@app.route('/houses')
-def houses():
-	houses = House.query.all()
-	housesList = []
-	for house in houses:
-		houses_dict = {
-				'house_number': house.house_number,
-				'price': house.price,
-				'house_type': house.house_type
+#View all units
+@app.route('/Units')
+def units():
+	units = Unit.query.all()
+	unitsList = []
+	for unit in units:
+		units_dict = {
+				'block_id': unit.block_id,
+				'unit_status': unit.unit_status
 				}
-		housesList.append(houses_dict)
+		unitsList.append(units_dict)
 
-	return jsonify({'data' :housesList}) 
+	return jsonify({'data': unitsList})
 
-#View a single house
 
-@app.route('/house/<string:id>/')
-def house(id):
-	house = House.query.get(id)
-	house_dict = {
-		'house_number': house.house_number,
-		'price': house.price,
-		'house_type': house.house_type	
+#View a single unit
+@app.route('/Unit/<id>/')
+def unit(id):
+	unit = Unit.query.get(id)
+	unit_dict = {
+		'block_id': unit.block_id,
+		'unit_status': unit.unit_status
 	}
-	
-	return jsonify({'data': house_dict})
-	  
+	return jsonify({'data': unit_dict})
 
-#Update  House details
 
-@app.route('/updatehouse', methods = ['POST', 'GET'])
-def update_house():
+#Update  Unit details
+@app.route('/UpdateUnit/<id>/', methods=['POST', 'GET'])
+def update_unit(id):
 	if request.method == 'POST':
 		request_json = request.get_json()
-		house_number = request_json.get('Number')
-		new_price = request_json.get('Price')
-		new_house_number = request_json.get('new_number')
-		new_type = request_json.get('new_type')
-		house = House.query.filter_by(house_number = house_number).first()
-		if new_price and new_house_number and new_type:
-			house.price = new_price
-			db.session.flush()
-			house.house_type = new_type
-			db.session.flush()
-			house.house_number = new_house_number
-			db.session.commit()
-			return ("House number, price and type have been changed!","Success")
-		elif new_price and new_house_number:
-			house.price = new_price
-			db.session.flush()
-			house.house_number = new_house_number
-			db.session.commit()
-			return ("House number and price have been changed!","Success")
-		elif new_price and new_type:
-			house.price = new_price
-			db.session.flush()
-			house.house_type = new_type
-			db.session.commit()
-			return ("House type and price have been changed!","Success")
-		elif new_house_number and new_type:
-			house.house_type = new_type
-			db.session.flush()
-			house.house_number = new_house_number
-			db.session.commit()
-			return ("House number and type have been changed!","Success")
-		elif new_house_number:
-			house.house_number = new_house_number
-			db.session.commit()
-			return ("House number has been changed!", "success")
-		elif new_type:
-			house.house_type = new_type
-			db.session.commit()
-			return("House type has been changed!","Success")
-		elif new_price:
-			house.price = new_price
-			db.session.commit()
-			return("House Price has been changed", "Success")
-			
-#Delete a House
-
-@app.route('/deletehouse', methods = ['POST', 'GET'])
-def delete_house():
-	if request.method =='POST':
-		request_json = request.get_json()
-		house_number = request_json.get('Number')
-		house = House.query.filter_by(house_number = house_number).first()
-		db.session.delete(house)
+		new_status = request_json.get('unit_status')
+		unit = Unit.query.get(id)
+		unit.unit_status = new_status
 		db.session.commit()
+		response_object = {
+			'Message': 'Unit Status has been updated successfully',
+			'block_id': unit.block_id,
+			'new_status': unit.unit_status
+		}
+		return jsonify(response_object), 200
 
-		return('The House has been deleted!', 'danger')
-	return("Invalid Method")
+
+	#Delete a Unit
+@app.route('/DeleteUnit/<id>/', methods=['DELETE'])
+def delete_unit(id):
+		unit = Unit.query.get(id)
+		db.session.delete(unit)
+		db.session.commit()
+		return jsonify({'message': 'The Unit has been deleted!'}), 200
 
