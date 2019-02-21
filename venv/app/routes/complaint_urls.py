@@ -9,6 +9,10 @@ from database.complaint import Complaint
 from database.user import User
 from database.block import Block
 from database.unit import Unit
+from database.block import Property
+from database.block import Caretaker
+from database.block import ServiceProviders
+from database.block import Services
 #from database.rental import Image
 
 
@@ -109,6 +113,38 @@ def update_complant():
         return "Complaint has been fixed!", "success"
 
 
+@app.route('/ServiceComplaint/<id>/', methods=['POST'])
+def service_complaint(id):
+    response_json = request.get_json()
+    provider_name = response_json.get('provider_name')
+    provider_contact = response_json.get('provider_contact')
+    fixed_date = response_json.get('fixed_date')
+    cost = response_json.get('cost')
+    if provider_name is None or provider_contact is None or fixed_date is None or cost is None:
+        return jsonify({'message': 'Fields should not be null'}), 400
+    # Insert Service Provider
+    service_providers = ServiceProviders(provider_name, provider_contact)
+    db.session.add(service_providers)
+    db.session.commit()
+    # Insert Service done
+    service = Services(id, service_providers.provider_id, fixed_date, cost)
+    db.session.add(service)
+    db.session.commit()
+
+    complaint = Complaint.query.filter_by(complaint_id=id).first()
+    complaint.fixed_date = fixed_date
+    db.session.commit()
+    response_object = {
+        'complaint_id': service.complaint_id,
+        'provider_id': service_providers.provider_id,
+        'provider_name': service_providers.provider_name,
+        'provider_contact': service_providers.provider_contact,
+        'fixed_date':service.fixed_date,
+        'cost': service.cost
+    }
+    return jsonify(response_object), 200
+
+
 @app.route('/DeleteComplaint/<string:id>/', methods=['DELETE'])
 def delete_complaint(id):
     complaint = Complaint.query.get(id)
@@ -133,14 +169,143 @@ def unit_complaints(id):
 
 
 #Block Complaints
-@app.route('/BlockComplaints/<id>')
+@app.route('/BlockComplaints/<id>/')
 def block_complaints(id):
-    units = db.session.query(Block).join(Unit).filter_by(block_id=id).all()
-    return units
+    # Blocks
+    blocks = Block.query.filter_by(block_id=id).all()
+    if not blocks:
+        return jsonify({'message': 'No such block.'}), 400
+    block_complaints = []
+    for block in blocks:
+        units = Unit.query.filter_by(block_id=block.block_id).all()
+        units_array = []
+        for unit in units:
+            if unit.unit_status == 6:
+                status = 'Empty'
+            else:
+                status = 'Occupied'
+            units_array.append(unit.unit_id)
+
+            for unit in units_array:
+                complaints = Complaint.query.filter_by(unit_id=unit).all()
+                complaint_list = []
+                for complaint in complaints:
+                    complaint_dict = {
+                        'unit_id': unit,
+                        'unit_status': status,
+                        'date_posted': complaint.date_posted,
+                        'message': complaint.message,
+                        'due_date': complaint.due_date,
+                        'fixed_date': complaint.fixed_date
+                    }
+                    complaint_list.append(complaint_dict)
+            block_complaints.append(complaint_list)
+    return jsonify({'data': block_complaints}), 200
 
 
+# Property manager Complaints
+@app.route('/PropertyManagerComplaints/<id>/')
+def property_manager_complaints(id):
+    # fetch Property using property manager id
+    properties = Property.query.filter_by(manager_id=id).all()
+    if not properties:
+        return jsonify({'message': 'No such property'}), 200
+    property_list = []
+    for property in properties:
+        blocks = Block.query.filter_by(property_id=property.property_id).all()
+        for block in blocks:
+            units = Unit.query.filter_by(block_id=block.block_id).all()
+            for unit in units:
+                if unit.unit_status == 6:
+                    status = 'Vacant'
+                else:
+                    status = 'Occupied'
+                complaints = Complaint.query.filter_by(unit_id=unit.unit_id).all()
+                complaints_list = []
+                for complaint in complaints:
+                    complaint_dict = {
+                        'property_id': property.property_id,
+                        'block_id': block.block_id,
+                        'unit_id': unit.unit_id,
+                        'unit_status': status,
+                        'date_posted': complaint.date_posted,
+                        'message': complaint.message,
+                        'due_date': complaint.due_date,
+                        'fixed_date': complaint.fixed_date
+                    }
+                    complaints_list.append(complaint_dict)
+        property_list.append(complaints_list)
+    return jsonify(property_list), 200
 
 
+# Caretaker assigned complaints
+@app.route('/CaretakerComplaints/<id>/')
+def caretaker_complaints(id):
+    caretaker = Caretaker.query.get(id)
+    if not caretaker:
+        return jsonify({'message': 'No such caretaker'}), 400
+    caretaker_property = Property.query.filter_by(property_id=caretaker.property_id).first()
+    property_complaints = []
+    blocks = Block.query.filter_by(property_id=caretaker_property.property_id).all()
+    if not blocks:
+        return jsonify({'message': 'Blocks not available'}), 400
+    for block in blocks:
+        units = Unit.query.filter_by(block_id=block.block_id).all()
+        for unit in units:
+            if unit.unit_status == 6:
+                status = 'Vacant'
+            else:
+                status = 'Occupied'
+            complaints = Complaint.query.filter_by(unit_id=unit.unit_id).all()
+            complaints_list = []
+            for complaint in complaints:
+                complaint_dict = {
+                    'property_id': caretaker_property.property_id,
+                    'block_id': block.block_id,
+                    'unit_id': unit.unit_id,
+                    'unit_status': status,
+                    'date_posted': complaint.date_posted,
+                    'message': complaint.message,
+                    'due_date': complaint.due_date,
+                    'fixed_date': complaint.fixed_date
+                }
+                complaints_list.append(complaint_dict)
+            property_complaints.append(complaints_list)
+    return jsonify(property_complaints), 200
 
+
+# Landlord Complaints
+@app.route('/LandlordComplaints/<id>/')
+def landlord_complaints(id):
+    # fetch Property using property manager id
+    properties = Property.query.filter_by(landlord_id=id).all()
+    if not properties:
+        return jsonify({'message': 'No such property'}), 200
+    property_list = []
+    for property in properties:
+        blocks = Block.query.filter_by(property_id=property.property_id).all()
+        for block in blocks:
+            units = Unit.query.filter_by(block_id=block.block_id).all()
+            for unit in units:
+                if unit.unit_status == 6:
+                    status = 'Vacant'
+                else:
+                    status = 'Occupied'
+                complaints = Complaint.query.filter_by(unit_id=unit.unit_id).all()
+                complaints_list = []
+                for complaint in complaints:
+                    complaint_dict = {
+                        'property_id': property.property_id,
+                        'block_id': block.block_id,
+                        'unit_id': unit.unit_id,
+                        'unit_status': status,
+                        'date_posted': complaint.date_posted,
+                        'message': complaint.message,
+                        'due_date': complaint.due_date,
+                        'fixed_date': complaint.fixed_date
+                    }
+                    complaints_list.append(complaint_dict)
+        property_list.append(complaints_list)
+    return jsonify(property_list), 200
         
 

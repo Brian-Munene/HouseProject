@@ -1,7 +1,25 @@
 from datetime import datetime
 from routes import db
 
-# Block model
+
+#Unit Model
+class Unit(db.Model):
+
+    __tablename__ = 'units'
+
+    unit_id = db.Column(db.Integer, primary_key=True)
+    block_id = db.Column(db.Integer, db.ForeignKey('blocks.block_id'), nullable=True)
+    unit_status = db.Column(db.Integer, nullable=False)
+
+    # Relationships
+    rentals = db.relationship('Rental', backref='units', lazy=True)
+    complaints = db.relationship('Complaint', backref='units', lazy=True)
+
+    def __init__(self, block_id, unit_status):
+        self.block_id = block_id
+        self.unit_status = unit_status
+
+
 
 '''
 class Block(db.Model):
@@ -20,19 +38,3 @@ class Block(db.Model):
 '''
 
 
-#Block Model
-class Unit(db.Model):
-
-    __tablename__ = 'units'
-
-    unit_id = db.Column(db.Integer, primary_key=True)
-    block_id = db.Column(db.Integer, db.ForeignKey('blocks.block_id'), nullable=True)
-    unit_status = db.Column(db.Integer, nullable=False)
-
-    # Relationships
-    rentals = db.relationship('Rental', backref='units', lazy=True)
-    complaints = db.relationship('Complaint', backref='units', lazy=True)
-
-    def __init__(self, block_id, unit_status):
-        self.block_id = block_id
-        self.unit_status = unit_status
