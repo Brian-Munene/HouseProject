@@ -7,8 +7,11 @@ from database.unit import Unit
 from database.block import Property
 from database.block import PropertyManager
 from database.block import Landlord
-
-
+from database.block import Block
+from database.rental import Rental
+from database.block import Tenant
+from database.block import Lease
+from database.block import Transactions
 # Insert new Property
 @app.route('/InsertProperty', methods=['GET', 'POST'])
 def insert_property():
@@ -91,16 +94,69 @@ def landlord_properties(id):
     properties = Property.query.filter_by(landlord_id=id).all()
     if not properties:
         return jsonify({'Error': 'Landlord does not exist.'}), 200
-    propertiesList = []
+    properties_list = []
     for property in properties:
+        block_list = []
         properties_dict = {
             'property_id': property.property_id,
             'Property_name': property.property_name,
             'manager_id': property.manager_id,
-            'landlord_id': property.landlord_id
+            'landlord_id': property.landlord_id,
+            'block_list': block_list
         }
-        propertiesList.append(properties_dict)
-    return jsonify({'data': propertiesList})
+        properties_list.append(properties_dict)
+        blocks = Block.query.filter_by(property_id=property.property_id)
+        for block in blocks:
+            units = Unit.query.filter_by(block_id=block.block_id).all()
+            unit_list = []
+            block_dict = {
+                'block_name': block.block_name,
+                'block_id': block.block_id,
+                'unit_list': unit_list
+            }
+            block_list.append(block_dict)
+            for unit in units:
+                rental_list = []
+                unit_dict = {
+                    'unit_id': unit.unit_id,
+                    'unit_status': unit.unit_status,
+                    'rental_list': rental_list
+                }
+                unit_list.append(unit_dict)
+                rentals = Rental.query.filter_by(unit_id=unit.unit_id).all()
+                for rental in rentals:
+                    tenant_list = []
+                    rental_dict = {
+                        'rental_id': rental.rental_id,
+                        'tenant_list': tenant_list
+                    }
+                    rental_list.append(rental_dict)
+                    tenants = Tenant.query.filter_by(tenant_id=rental.tenant_id).all()
+                    for tenant in tenants:
+                        lease_list = []
+                        tenant_dict = {
+                            'tenant_first_name': tenant.first_name,
+                            'tenant_last_name': tenant.last_name,
+                            'lease_list': lease_list
+                        }
+                        tenant_list.append(tenant_dict)
+                        leases = Lease.query.filter_by(lease_id=rental.lease_id).all()
+                        for lease in leases:
+                            lease_dict = {
+                                'lease_begin_date': lease.lease_begin_date,
+                                'lease_end_date': lease.lease_end_date,
+                                'lease_amount': lease.lease_amount,
+                                'service_charges': lease.service_charges,
+                                'payment_interval': lease.payment_interval,
+                                'lease_status': lease.lease_status
+                            }
+                            lease_list.append(lease_dict)
+                        tenant_list.append(lease_list)
+                    rental_list.append(tenant_list)
+                unit_list.append(rental_list)
+            block_list.append(unit_list)
+        properties_list.append(block_list)
+    return jsonify({'data': properties_list})
 
 
 # Update Property Details
