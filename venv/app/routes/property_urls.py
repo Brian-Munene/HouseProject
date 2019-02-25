@@ -12,6 +12,9 @@ from database.rental import Rental
 from database.block import Tenant
 from database.block import Lease
 from database.block import Transactions
+from database.user import User
+
+
 # Insert new Property
 @app.route('/InsertProperty', methods=['GET', 'POST'])
 def insert_property():
@@ -70,10 +73,12 @@ def view_property(id):
     return jsonify(property_dict), 200
 
 
-#Manaager Properties
+#Manager Properties using user_id
 @app.route('/ManagerProperties/<id>/')
 def manager_property(id):
-    properties = Property.query.filter_by(manager_id=id).all()
+    user = User.query.get(id)
+    manager = PropertyManager.query.filter_by(email=user.email).first()
+    properties = Property.query.filter_by(manager_id=manager.manager_id).all()
     if not properties:
         return jsonify({'Error': 'Manager does not exist.'}), 200
     propertiesList = []
@@ -88,20 +93,52 @@ def manager_property(id):
     return jsonify({'data': propertiesList})
 
 
-#Landlord Properties
+#Landlord Property using property_id
+@app.route('/LandlordProperty/<id>/')
+def landlord_property(id):
+    property = Property.query.get(id)
+    if not property:
+        return jsonify({'message': 'No such Property.'}), 400
+    manager = PropertyManager.query.get(property.manager_id)
+    manager_name = manager.first_name + ' ' + manager.last_name
+    if not manager:
+        manager_name = 'No Manager'
+    landlord = Landlord.query.get(property.landlord_id)
+    landlord_name = landlord.first_name + ' ' + landlord.last_name
+    if not landlord:
+        landlord_name = 'No Landlord'
+    property_dict = {
+        'property_name': property.property_name,
+        'manager_id': manager_name,
+        'landlord_id': landlord_name
+    }
+    return jsonify(property_dict), 200
+
+
+#Landlord Properties using user id
 @app.route('/LandlordProperties/<id>/')
 def landlord_properties(id):
-    properties = Property.query.filter_by(landlord_id=id).all()
+    user = User.query.get(id)
+    landlord = Landlord.query.filter_by(email=user.email).first()
+    properties = Property.query.filter_by(landlord_id=landlord.landlord_id).all()
     if not properties:
         return jsonify({'Error': 'Landlord does not exist.'}), 200
     properties_list = []
     for property in properties:
         block_list = []
+        manager = PropertyManager.query.get(property.manager_id)
+        manager_name = manager.first_name + ' ' + manager.last_name
+        if not manager:
+            manager_name = 'No Manager'
+        landlord = Landlord.query.get(property.landlord_id)
+        landlord_name = landlord.first_name + ' ' + landlord.last_name
+        if not landlord:
+            landlord_name = 'No Landlord'
         properties_dict = {
             'property_id': property.property_id,
             'Property_name': property.property_name,
-            'manager_id': property.manager_id,
-            'landlord_id': property.landlord_id,
+            'manager_id': manager_name,
+            'landlord_id': landlord_name,
             'block_list': block_list
         }
         properties_list.append(properties_dict)
@@ -116,44 +153,26 @@ def landlord_properties(id):
             }
             block_list.append(block_dict)
             for unit in units:
-                rental_list = []
+                tenant_list = []
+                if unit.unit_status == 6:
+                    status = 'Empty'
+                else:
+                    status = 'Occupied'
                 unit_dict = {
                     'unit_id': unit.unit_id,
-                    'unit_status': unit.unit_status,
-                    'rental_list': rental_list
+                    'unit_status': status,
+                    'tenant_list': tenant_list
                 }
                 unit_list.append(unit_dict)
-                rentals = Rental.query.filter_by(unit_id=unit.unit_id).all()
-                for rental in rentals:
-                    tenant_list = []
-                    rental_dict = {
-                        'rental_id': rental.rental_id,
-                        'tenant_list': tenant_list
+                rental = Rental.query.filter_by(unit_id=unit.unit_id).first()
+                if rental:
+                    tenant = Tenant.query.filter_by(tenant_id=rental.tenant_id).first()
+                    tenant_dict = {
+                        'tenant_first_name': tenant.first_name,
+                        'tenant_last_name': tenant.last_name
                     }
-                    rental_list.append(rental_dict)
-                    tenants = Tenant.query.filter_by(tenant_id=rental.tenant_id).all()
-                    for tenant in tenants:
-                        lease_list = []
-                        tenant_dict = {
-                            'tenant_first_name': tenant.first_name,
-                            'tenant_last_name': tenant.last_name,
-                            'lease_list': lease_list
-                        }
-                        tenant_list.append(tenant_dict)
-                        leases = Lease.query.filter_by(lease_id=rental.lease_id).all()
-                        for lease in leases:
-                            lease_dict = {
-                                'lease_begin_date': lease.lease_begin_date,
-                                'lease_end_date': lease.lease_end_date,
-                                'lease_amount': lease.lease_amount,
-                                'service_charges': lease.service_charges,
-                                'payment_interval': lease.payment_interval,
-                                'lease_status': lease.lease_status
-                            }
-                            lease_list.append(lease_dict)
-                        tenant_list.append(lease_list)
-                    rental_list.append(tenant_list)
-                unit_list.append(rental_list)
+                    tenant_list.append(tenant_dict)
+                    unit_list.append(tenant_list)
             block_list.append(unit_list)
         properties_list.append(block_list)
     return jsonify({'data': properties_list})

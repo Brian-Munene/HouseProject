@@ -13,6 +13,9 @@ from database.block import Property
 from database.block import Caretaker
 from database.block import ServiceProviders
 from database.block import Services
+from database.user import User
+from database.block import PropertyManager
+from database.block import Landlord
 #from database.rental import Image
 
 
@@ -84,7 +87,7 @@ def view_single_complaint(id):
 
 
 @app.route('/UpdateComplaint', methods=['POST'])
-def update_complant():
+def update_complaint():
     request_json = request.get_json()
     complaint_id = request_json.get('id')
     new_message = request_json.get('new_message')
@@ -113,6 +116,7 @@ def update_complant():
         return "Complaint has been fixed!", "success"
 
 
+# Service performed on a complaint using complaint_id
 @app.route('/ServiceComplaint/<id>/', methods=['POST'])
 def service_complaint(id):
     response_json = request.get_json()
@@ -145,7 +149,8 @@ def service_complaint(id):
     return jsonify(response_object), 200
 
 
-@app.route('/DeleteComplaint/<string:id>/', methods=['DELETE'])
+#Delete a complaint using the complaint_id
+@app.route('/DeleteComplaint/<id>/', methods=['DELETE'])
 def delete_complaint(id):
     complaint = Complaint.query.get(id)
     db.session.delete(complaint)
@@ -153,6 +158,7 @@ def delete_complaint(id):
     return "Complaint has been deleted!", "Success"
 
 
+#Find the complaint of a single unit using unit_id
 @app.route('/UnitComplaints/<id>')
 def unit_complaints(id):
     complaints = Complaint.query.filter_by(unit_id=id).all()
@@ -168,7 +174,7 @@ def unit_complaints(id):
     return jsonify({'data': complaintList})
 
 
-#Block Complaints
+#Block Complaints using block_id
 @app.route('/BlockComplaints/<id>/')
 def block_complaints(id):
     # Blocks
@@ -188,7 +194,7 @@ def block_complaints(id):
 
             for unit in units_array:
                 complaints = Complaint.query.filter_by(unit_id=unit).all()
-                complaint_list = []
+                # complaint_list = []
                 for complaint in complaints:
                     complaint_dict = {
                         'unit_id': unit,
@@ -198,16 +204,18 @@ def block_complaints(id):
                         'due_date': complaint.due_date,
                         'fixed_date': complaint.fixed_date
                     }
-                    complaint_list.append(complaint_dict)
-            block_complaints.append(complaint_list)
+                    # complaint_list.append()
+                    block_complaints.append(complaint_dict)
     return jsonify({'data': block_complaints}), 200
 
 
-# Property manager Complaints
+# Property manager Complaints using user_id
 @app.route('/PropertyManagerComplaints/<id>/')
 def property_manager_complaints(id):
+    user = User.query.get(id)
+    manager = PropertyManager.query.filter_by(email=user.email).first()
     # fetch Property using property manager id
-    properties = Property.query.filter_by(manager_id=id).all()
+    properties = Property.query.filter_by(manager_id=manager.manager_id).all()
     if not properties:
         return jsonify({'message': 'No such property'}), 200
     property_list = []
@@ -221,9 +229,10 @@ def property_manager_complaints(id):
                 else:
                     status = 'Occupied'
                 complaints = Complaint.query.filter_by(unit_id=unit.unit_id).all()
-                complaints_list = []
+                # complaints_list = []
                 for complaint in complaints:
                     complaint_dict = {
+                        'complaint_id': complaint.complaint_id,
                         'property_id': property.property_id,
                         'block_id': block.block_id,
                         'unit_id': unit.unit_id,
@@ -233,17 +242,19 @@ def property_manager_complaints(id):
                         'due_date': complaint.due_date,
                         'fixed_date': complaint.fixed_date
                     }
-                    complaints_list.append(complaint_dict)
-        property_list.append(complaints_list)
+                    # complaints_list.append()
+                    property_list.append(complaint_dict)
     return jsonify(property_list), 200
 
 
-# Caretaker assigned complaints
+# Caretaker assigned complaints using user_id
 @app.route('/CaretakerComplaints/<id>/')
 def caretaker_complaints(id):
-    caretaker = Caretaker.query.get(id)
+    user = User.query.get(id)
+    caretaker = Caretaker.query.filter_by(email=user.email).first()
+    caretaker = Caretaker.query.get(caretaker.caretaker_id)
     if not caretaker:
-        return jsonify({'message': 'No such caretaker'}), 400
+        return jsonify({'message': 'You are not a caretaker'}), 400
     caretaker_property = Property.query.filter_by(property_id=caretaker.property_id).first()
     property_complaints = []
     blocks = Block.query.filter_by(property_id=caretaker_property.property_id).all()
@@ -274,11 +285,13 @@ def caretaker_complaints(id):
     return jsonify(property_complaints), 200
 
 
-# Landlord Complaints
+# Landlord Complaints using user_id
 @app.route('/LandlordComplaints/<id>/')
 def landlord_complaints(id):
+    user = User.query.get(id)
+    landlord = Landlord.query.filter_by(email=user.email).first()
     # fetch Property using property manager id
-    properties = Property.query.filter_by(landlord_id=id).all()
+    properties = Property.query.filter_by(landlord_id=landlord.landlord_id).all()
     if not properties:
         return jsonify({'message': 'No such property'}), 200
     property_list = []

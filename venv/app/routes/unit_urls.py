@@ -6,6 +6,8 @@ from routes import app
 from routes import db
 from database.unit import Unit
 from database.user import User
+from database.block import Tenant
+from database.rental import Rental
 
 
 @app.route('/InsertUnit', methods=['GET', 'POST'])
@@ -53,6 +55,20 @@ def unit(id):
 		'unit_status': unit.unit_status
 	}
 	return jsonify({'data': unit_dict})
+
+
+#View a user Unit
+@app.route('/TenantUnit/<id>/')
+def tenant_unit(id):
+	user = User.query.get(id)
+	tenant = Tenant.query.filter_by(email=user.email).first()
+	rental = Rental.query.filter_by(tenant_id=tenant.tenant_id).first()
+	unit = Unit.query.get(rental.unit_id)
+	unit_dict = {
+		'unit_id': unit.unit_id,
+		'block_id': unit.block_id
+	}
+	return jsonify(unit_dict), 200
 
 
 #Update  Unit details

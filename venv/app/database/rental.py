@@ -48,7 +48,7 @@ class Image(db.Model):
     __tablename__ = 'complaints_images'
 
     image_id = db.Column(db.Integer, primary_key=True)
-    image_name = db.Column(db.String(75), nullable=False)
+    image_url = db.Column(db.String(75), nullable=False)
     complaint_id = db.Column(db.Integer, db.ForeignKey('complaints.complaint_id'), nullable=False)
 
     def __init__(self, image_name, complaint_id):
