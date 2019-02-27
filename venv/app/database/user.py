@@ -12,10 +12,28 @@ class User(db.Model):
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
-    
+
     def verify_password(self, password):
         return pwd_context.verify(password, self.password_hash)
 
+    __tablename__ = 'users'
+
+    user_id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(128), nullable=False)
+    category = db.Column(db.String(30), nullable=False)
+    account_status = db.Column(db.Integer, nullable=False)
+
+    # blocks = db.relationship('Block', backref='users', lazy=True)
+    # rental = db.relationship('Rental', backref='users', lazy=True)
+    # complaints = db.relationship('Complaint', backref='users', lazy=True)
+
+    def __init__(self, email, category, account_status):
+        self.category = category
+        self.email = email
+        self.account_status = account_status
+
+'''
     def encode_auth_token(self, user_id):
         """"
         Generate the Auth Token
@@ -56,26 +74,6 @@ class User(db.Model):
             return 'Invalid Token. Please login again.'
 
 
-
-    __tablename__ = 'users'
-
-    user_id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(128), nullable=False)
-    category = db.Column(db.String(30), nullable=False)
-    account_status = db.Column(db.Integer, nullable=False)
-
-    tokens = db.relationship('Token', backref='users', lazy=True)
-    # blocks = db.relationship('Block', backref='users', lazy=True)
-    # rental = db.relationship('Rental', backref='users', lazy=True)
-    # complaints = db.relationship('Complaint', backref='users', lazy=True)
-
-    def __init__(self, email, category, account_status):
-        self.category = category
-        self.email = email
-        self.account_status = account_status
-
-
 class Token(db.Model):
     __tablename__ = 'Tokens'
 
@@ -91,11 +89,6 @@ class Token(db.Model):
         self.client_id = client_id
         self.scopes = scopes
         self.revoked = revoked
-
-
-
-
-
 
 
 class BlacklistToken(db.Model):
@@ -124,6 +117,4 @@ class BlacklistToken(db.Model):
             return True
         else:
             return False
-
-
-
+'''

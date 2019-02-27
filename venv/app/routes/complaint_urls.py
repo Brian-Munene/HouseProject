@@ -27,6 +27,8 @@ def create_complaint():
     due_date = request_json.get('due_date')
     fixed_date = request_json.get('fixed_date')
     unit_id = request_json.get('unit_id')
+    if message is None or due_date is None or unit_id is None:
+        return jsonify({'message', 'Fields should not be null.'}), 422
     if not Unit.query.get(unit_id):
         return jsonify({'message': 'Unit does not exist.'}), 400
     complaint = Complaint(message, due_date, fixed_date, unit_id)
@@ -38,7 +40,8 @@ def create_complaint():
         'message': complaint.message,
         'due_date': complaint.due_date,
         'fixed_date': complaint.fixed_date,
-        'unit_id': complaint.unit_id
+        'unit_id': complaint.unit_id,
+	    'complaint_id': complaint.complaint_id
     }
     return jsonify(response_object), 201
 
@@ -120,30 +123,25 @@ def update_complaint():
 @app.route('/ServiceComplaint/<id>/', methods=['POST'])
 def service_complaint(id):
     response_json = request.get_json()
-    provider_name = response_json.get('provider_name')
-    provider_contact = response_json.get('provider_contact')
-    fixed_date = response_json.get('fixed_date')
     cost = response_json.get('cost')
-    if provider_name is None or provider_contact is None or fixed_date is None or cost is None:
+    provider_id = response_json.get('provider_id')
+    if cost is None:
         return jsonify({'message': 'Fields should not be null'}), 400
-    # Insert Service Provider
-    service_providers = ServiceProviders(provider_name, provider_contact)
-    db.session.add(service_providers)
-    db.session.commit()
     # Insert Service done
-    service = Services(id, service_providers.provider_id, fixed_date, cost)
+    provider = ServiceProviders.query.get(provider_id)
+    service = Services(id, provider.provider_id, cost)
     db.session.add(service)
     db.session.commit()
 
     complaint = Complaint.query.filter_by(complaint_id=id).first()
-    complaint.fixed_date = fixed_date
+    complaint.fixed_date = service.fixed_date
     db.session.commit()
     response_object = {
         'complaint_id': service.complaint_id,
-        'provider_id': service_providers.provider_id,
-        'provider_name': service_providers.provider_name,
-        'provider_contact': service_providers.provider_contact,
-        'fixed_date':service.fixed_date,
+        'provider_id': provider.provider_id,
+        'provider_name': provider.provider_name,
+        'provider_contact': provider.provider_contact,
+        'fixed_date': service.fixed_date,
         'cost': service.cost
     }
     return jsonify(response_object), 200

@@ -1,3 +1,4 @@
+from datetime import datetime
 from routes import db
 
 
@@ -44,7 +45,7 @@ class PropertyManager(db.Model):
     first_name = db.Column(db.String(75), nullable=False)
     last_name = db.Column(db.String(75), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
-    phone = db.Column(db.Integer, nullable=False, unique=True)
+    phone = db.Column(db.String(15), nullable=False, unique=True)
 
     # Relationships
     properties = db.relationship('Property', backref='property_managers', lazy=True)
@@ -65,7 +66,7 @@ class Landlord(db.Model):
     first_name = db.Column(db.String(75), nullable=False)
     last_name = db.Column(db.String(75), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
-    phone = db.Column(db.Integer, nullable=False, unique=True)
+    phone = db.Column(db.String(15), nullable=False, unique=True)
 
     # Relationships
     properties = db.relationship('Property', backref='landlords', lazy=True)
@@ -87,7 +88,7 @@ class Caretaker(db.Model):
     first_name = db.Column(db.String(75), nullable=False)
     last_name = db.Column(db.String(75), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
-    phone = db.Column(db.Integer, nullable=False, unique=True)
+    phone = db.Column(db.String(15), nullable=False, unique=True)
 
     def __init__(self, property_id, first_name, last_name, email, phone):
         self.property_id = property_id
@@ -106,7 +107,7 @@ class Tenant(db.Model):
     first_name = db.Column(db.String(75), nullable=False)
     last_name = db.Column(db.String(75), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
-    phone = db.Column(db.Integer, nullable=False, unique=True)
+    phone = db.Column(db.String(15), nullable=False, unique=True)
 
     #Relationships
     rentals = db.relationship('Rental', backref='tenants', lazy=True)
@@ -152,7 +153,7 @@ class Lease(db.Model):
     # Relationships
     rentals = db.relationship('Rental', backref='leases', lazy=True)
 
-    def __init__(self, lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes, lease_status, paymnet_interval):
+    def __init__(self, lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes, lease_status, payment_interval):
         self.lease_begin_date = lease_begin_date
         self.lease_end_date = lease_end_date
         self.lease_amount = lease_amount
@@ -160,7 +161,7 @@ class Lease(db.Model):
         self.service_charges = service_charges
         self.notes = notes
         self.lease_status = lease_status
-        self.payment_interval = paymnet_interval
+        self.payment_interval = payment_interval
 
 
 # Status Model
@@ -202,7 +203,7 @@ class ServiceProviders(db.Model):
 
     provider_id = db.Column(db.Integer, primary_key=True)
     provider_name = db.Column(db.String(75), nullable=False)
-    provider_contact = db.Column(db.Integer, nullable=False, unique=True)
+    provider_contact = db.Column(db.String(15), nullable=False, unique=True)
 
     #Relationships
     services = db.relationship('Services', backref='service_providers', lazy=True)
@@ -223,10 +224,10 @@ class Services(db.Model):
     fixed_date = db.Column(db.DateTime, nullable=False)
     cost = db.Column(db.Float(12), nullable=False)
 
-    def __init__(self, complaint_id, provider_id, fixed_date, cost):
+    def __init__(self, complaint_id, provider_id, cost):
         self.complaint_id = complaint_id
         self.provider_id = provider_id
-        self.fixed_date = fixed_date
+        self.fixed_date = datetime.now()
         self.cost = cost
 
 

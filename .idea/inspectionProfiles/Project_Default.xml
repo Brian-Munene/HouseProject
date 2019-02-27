@@ -12,6 +12,8 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="app.database.user.routes" />
+          <option value="app.routes.service_provider_urls.database" />
+          <option value="app.routes.service_provider_urls.routes" />
         </list>
       </option>
     </inspection_tool>

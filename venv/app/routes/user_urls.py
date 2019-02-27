@@ -6,7 +6,7 @@ from passlib.hash import sha256_crypt
 from routes import app
 from routes import db
 from database.user import User
-from database.user import Token
+
 from database.block import Tenant
 from database.block import Caretaker
 from database.block import Landlord
@@ -138,72 +138,63 @@ def login():
             return "Missing arguments", 400   # missing arguments
         user = User.query.filter_by(email=email, account_status=3).first()
         if user and user.verify_password(password):
-            auth_token = user.encode_auth_token(user.user_id)
-            if auth_token:
-                if user.category == 'tenant':
-                    tenant = Tenant.query.filter_by(email=email).first()
-                    rental = Rental.query.filter_by(tenant_id=tenant.tenant_id).first()
-                    app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
-                    response_object = {
-                        'message': 'Successfully Logged in.',
-                        'status': 'success',
-                        'public_id': user.user_id,
-                        'user_type': user.category,
-                        'firstname': tenant.first_name,
-                        'lastname': tenant.last_name,
-                        'email': user.email,
-                        'unit_id': rental.unit_id,
-                        'tenant_id': rental.tenant_id
-                    }
-                    return jsonify(response_object), 200
-                elif user.category == 'landlord':
-                    landlord = Landlord.query.filter_by(email=email).first()
-                    app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
-                    response_object = {
-                        'message': 'Successfully Logged in.',
-                        'status': 'success',
-                        'public_id': user.user_id,
-                        'user_type': user.category,
-                        'firstname': landlord.first_name,
-                        'lastname': landlord.last_name,
-                        'email': user.email
-                    }
-                    return jsonify(response_object), 200
-                elif user.category == 'caretaker':
-                    caretaker = Caretaker.query.filter_by(email=email).first()
-                    app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
-                    response_object = {
-                        'message': 'Successfully Logged in.',
-                        'status': 'success',
-                        'public_id': user.user_id,
-                        'user_type': user.category,
-                        'firstname': caretaker.first_name,
-                        'lastname': caretaker.last_name,
-                        'email': user.email
-                    }
-                    return jsonify(response_object), 200
-                elif user.category == "property manager":
-                    manager = PropertyManager.query.filter_by(email=email).first()
-                    app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
-                    response_object = {
-                        'message': 'Successfully Logged in.',
-                        'status': 'success',
-                        'public_id': user.user_id,
-                        'user_type': user.category,
-                        'firstname': manager.first_name,
-                        'lastname': manager.last_name,
-                        'email': user.email
-                    }
-                    return jsonify(response_object), 200
-                else:
-                    return jsonify({'message': 'User details are unavailable'})
-
-            else:
-                app.logger.warning('{0} tried to log in at {1}'.format(email, datetime.now()))
-                response_object = {
-                    'message': 'Incorrect username or password'
-                }
-                return jsonify(response_object), 422
+	        if user.category == 'tenant':
+		        tenant = Tenant.query.filter_by(email=email).first()
+		        rental = Rental.query.filter_by(tenant_id=tenant.tenant_id).first()
+		        app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+		        response_object = {
+			        'message': 'Successfully Logged in.',
+			        'status': 'success',
+			        'public_id': user.user_id,
+			        'user_type': user.category,
+			        'firstname': tenant.first_name,
+			        'lastname': tenant.last_name,
+			        'email': user.email,
+			        'unit_id': rental.unit_id,
+			        'tenant_id': rental.tenant_id
+		        }
+		        return jsonify(response_object), 200
+	        elif user.category == 'landlord':
+		        landlord = Landlord.query.filter_by(email=email).first()
+		        app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+		        response_object = {
+			        'message': 'Successfully Logged in.',
+			        'status': 'success',
+			        'public_id': user.user_id,
+			        'user_type': user.category,
+			        'firstname': landlord.first_name,
+			        'lastname': landlord.last_name,
+			        'email': user.email
+		        }
+		        return jsonify(response_object), 200
+	        elif user.category == 'caretaker':
+		        caretaker = Caretaker.query.filter_by(email=email).first()
+		        app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+		        response_object = {
+			        'message': 'Successfully Logged in.',
+			        'status': 'success',
+			        'public_id': user.user_id,
+			        'user_type': user.category,
+			        'firstname': caretaker.first_name,
+			        'lastname': caretaker.last_name,
+			        'email': user.email
+		        }
+		        return jsonify(response_object), 200
+	        elif user.category == "property manager":
+		        manager = PropertyManager.query.filter_by(email=email).first()
+		        app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+		        response_object = {
+			        'message': 'Successfully Logged in.',
+			        'status': 'success',
+			        'public_id': user.user_id,
+			        'user_type': user.category,
+			        'firstname': manager.first_name,
+			        'lastname': manager.last_name,
+			        'email': user.email
+		        }
+		        return jsonify(response_object), 200
+	        else:
+		        return jsonify({'message': 'User details are unavailable'})
         else:
             app.logger.warning('{0} tried to log in at {1}'.format(email, datetime.now()))
 
