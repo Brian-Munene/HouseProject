@@ -7,6 +7,7 @@ from database.unit import Unit
 from database.block import Block
 from database.block import Property
 
+
 #Create a block
 @app.route('/InsertBlock', methods=['GET', 'POST'])
 def insert_block():

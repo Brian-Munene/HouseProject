@@ -8,11 +8,13 @@ class Block(db.Model):
     block_id = db.Column(db.Integer, primary_key=True)
     property_id = db.Column(db.Integer, db.ForeignKey('property.property_id'), nullable=False)
     block_name = db.Column(db.String(35), nullable=False)
+    number_of_units = db.Column(db.Integer, nullable=False)
 
     # Relationships
     units = db.relationship('Unit', backref='blocks', lazy=True)
 
-    def __init__(self, property_id, block_name):
+    def __init__(self, property_id, block_name, number_of_units):
+        self.number_of_units = number_of_units
         self.property_id = property_id
         self.block_name = block_name
 
@@ -127,7 +129,7 @@ class Transactions(db.Model):
     transaction_id = db.Column(db.Integer, primary_key=True)
     unit_id = db.Column(db.Integer, db.ForeignKey('units.unit_id'), nullable=False)
     amount_paid = db.Column(db.Float(12), nullable=False)
-    date_paid = db.Column(db.DateTime, nullable=False)
+    date_paid = db.Column(db.Date, nullable=False)
 
     def __init__(self, unit_id, amount_paid, date_paid):
         self.unit_id = unit_id
@@ -141,8 +143,8 @@ class Lease(db.Model):
     __tablename__ = 'leases'
 
     lease_id = db.Column(db.Integer, primary_key=True)
-    lease_begin_date = db.Column(db.DateTime, nullable=False)
-    lease_end_date = db.Column(db.DateTime, nullable=False)
+    lease_begin_date = db.Column(db.Date, nullable=False)
+    lease_end_date = db.Column(db.Date, nullable=False)
     lease_amount = db.Column(db.Float(12), nullable=False)
     promises = db.Column(db.Text(100), nullable=False)
     service_charges = db.Column(db.Float(12), nullable=True)
@@ -221,7 +223,7 @@ class Services(db.Model):
     service_id = db.Column(db.Integer, primary_key=True)
     complaint_id = db.Column(db.Integer, db.ForeignKey('complaints.complaint_id'), nullable=False)
     provider_id = db.Column(db.Integer, db.ForeignKey('service_providers.provider_id'), nullable=False)
-    fixed_date = db.Column(db.DateTime, nullable=False)
+    fixed_date = db.Column(db.Date, nullable=False)
     cost = db.Column(db.Float(12), nullable=False)
 
     def __init__(self, complaint_id, provider_id, cost):
@@ -237,6 +239,7 @@ class Notification(db.Model):
     __tablename__ = 'notifications'
 
     notification_id = db.Column(db.Integer, primary_key=True)
+
     notification_message = db.Column(db.Text(255), nullable=False)
     notification_recipient_id = db.Column(db.Integer, nullable=False)
     notification_type = db.Column(db.String(75), nullable=False)

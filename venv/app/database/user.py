@@ -1,6 +1,8 @@
 from passlib.apps import custom_app_context as pwd_context
 from datetime import datetime, timedelta
 import jwt
+import string
+import random
 
 #file imports
 from routes import db
@@ -9,6 +11,11 @@ from routes import app
 
 #User model
 class User(db.Model):
+
+    def randomPasswords(stringLength=8):
+        """Generate a random string of letters and digits """
+        lettersAndDigits = string.ascii_letters + string.digits
+        return ''.join(random.choice(lettersAndDigits) for i in range(stringLength))
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)

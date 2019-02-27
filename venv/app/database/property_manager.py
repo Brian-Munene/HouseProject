@@ -9,7 +9,7 @@ class PropertyManager(db.Model):
     first_name = db.Column(db.String(75), nullable=False)
     last_name = db.Column(db.String(75), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
-    phone = db.Column(db.integer(12), nullable=False, unique=True)
+    phone = db.Column(db.String(15), nullable=False, unique=True)
 
     # Relationships
     properties = db.relationship('Property', backref='property_managers', lazy=True)

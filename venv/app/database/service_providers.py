@@ -7,7 +7,7 @@ class ServiceProviders(db.Model):
 
     provider_id = db.Column(db.Integer, primary_key=True)
     provider_name = db.Column(db.String(75), nullable=False)
-    provider_contact = db.Column(db.Integer(12), nullable=False, unique=True)
+    provider_contact = db.Column(db.String(15), nullable=False, unique=True)
 
     #Relationships
     services = db.relationship('Services', backref='service_providers', lazy=True)

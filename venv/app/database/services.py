@@ -8,7 +8,7 @@ class Services(db.Model):
     service_id = db.Column(db.Integer, primary_key=True)
     complaint_id = db.Column(db.Integer, db.ForeignKey('complaints.complaint_id'), nullable=False)
     provider_id = db.Column(db.Integer, db.ForeignKey('service_providers.provider_id'), nullable=False)
-    fixed_date = db.Column(db.DateTime, nullable=False)
+    fixed_date = db.Column(db.Date, nullable=False)
     cost = db.Column(db.Float(12), nullable=False)
 
     def __init__(self, complaint_id, provider_id, fixed_date, cost):

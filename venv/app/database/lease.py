@@ -7,8 +7,8 @@ class Lease(db.Model):
     __tablename__ = 'leases'
 
     lease_id = db.Column(db.Integer, primary_key=True)
-    lease_begin_date = db.Column(db.DateTime, nullable=False)
-    lease_end_date = db.Column(db.DateTime, nullable=False)
+    lease_begin_date = db.Column(db.Date, nullable=False)
+    lease_end_date = db.Column(db.Date, nullable=False)
     lease_amount = db.Column(db.Float(12), nullable=False)
     promises = db.Column(db.Text(100), nullable=False)
     service_charges = db.Column(db.Float(12), nullable=True)

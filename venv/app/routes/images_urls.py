@@ -17,7 +17,7 @@ def allowed_file(filename):
         filename.rsplit('.', 1)[1].lower()in ALLOWED_EXTENSIONS
 
 
-@app.route('/InsertImage/<id>', methods=['GET', 'POST'])
+@app.route('/InsertImage/<id>', methods=['POST'])
 def upload_file(id):
         if request.method == 'POST':
 
@@ -25,7 +25,7 @@ def upload_file(id):
                 image = request.files['image']
                 #if file not selected submit empty part without filename
                 if image.filename == '':
-                        return 'No selected image'
+                        return jsonify({'message': 'No selected image'}), 400
                 if image and allowed_file(image.filename):
                         a = arrow.utcnow().timestamp
                         image_name = str(a) + secure_filename(image.filename)
@@ -43,7 +43,7 @@ def upload_file(id):
                                 }
                         return jsonify(response_object)
                 else:
-                        return jsonify({'data': 'Error sending from directory'})
+                        return jsonify({'data': 'Error sending from directory'}), 400
 
 
 @app.route('/ViewImages/<complaint_id>')

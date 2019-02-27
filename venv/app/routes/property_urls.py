@@ -15,22 +15,47 @@ from database.block import Transactions
 from database.user import User
 
 
-# Insert new Property
-@app.route('/InsertProperty', methods=['GET', 'POST'])
+# Insert new Property using property user_id
+@app.route('/InsertProperty/<id>', methods=['GET', 'POST'])
 def insert_property():
     if request.method == 'POST':
         request_json = request.get_json()
         property_name = request_json.get('property_name')
-        manager_id = request_json.get('manager_id')
-        landlord_id = request_json.get('landlord_id')
-        if property_name is None or manager_id is None or landlord_id is None:
+        landlord_email = request_json.get('landlord_email')
+        landlord_password = request_json.get('landlord_password')
+        landlord_category = request_json.get('landlord_category')
+        landlord_first_name = request_json.get('landlord_first_name')
+        landlord_last_name = request_json.get('landlord_last_name')
+        landlord_phone = request_json.get('landlord_phone')
+        block_name = request_json.get('block_name')
+        block_units = request_json.get('block_units')
+        caretaker_email = request_json.get('caretaker_email')
+        caretaker_category = request_json.get('caretaker_category')
+        caretaker_first_name = request_json.get('caretaker_first_name')
+        caretaker_last_name = request_json.get('caretaker_last_name')
+        caretaker_phone = request.json.get('caretaker_phone')
+        caretaker_password = request_json.get('caretaker_password')
+
+        user = User.query.get(id).first()
+        if not user:
+            return jsonify({'message': 'No such user.'}), 422
+        manager = PropertyManager.query.filter_by(email=user.email).first()
+        if not manager:
+            return jsonify({'message': 'You must be a manager to register property.'}), 400
+        if property_name is None or landlord_email is None or landlord_password is None or landlord_category is None or landlord_first_name\
+                is None or landlord_last_name is None or landlord_phone is None or block_name is None or block_units is None \
+                or caretaker_email is None or caretaker_category is None or caretaker_first_name is None or caretaker_last_name is None or caretaker_phone\
+                is None or caretaker_password is None:
             response_object = {
                 'message': 'Empty fields are not allowed',
                 'status': 'Fail'
             }
             return jsonify(response_object), 400
         else:
-            property = Property(property_name, manager_id, landlord_id)
+            landlord = Landlord(landlord_email, landlord_first_name, landlord_last_name, landlord_phone, landlord_category, landlord_password)
+            db.session.add(landlord)
+            db.session.commit()
+            property = Property(property_name, manager.manager_id, landlord.landlord_id)
             db.session.add(property)
             db.session.commit()
             response_object = {
@@ -119,7 +144,11 @@ def landlord_property(id):
 @app.route('/LandlordProperties/<id>/')
 def landlord_properties(id):
     user = User.query.get(id)
+    if not user:
+        return jsonify({'message': 'No such user.'}), 422
     landlord = Landlord.query.filter_by(email=user.email).first()
+    if not landlord:
+        return jsonify({'message': 'Only landlords can view this information'}), 422
     properties = Property.query.filter_by(landlord_id=landlord.landlord_id).all()
     if not properties:
         return jsonify({'Error': 'Landlord does not exist.'}), 200
@@ -156,25 +185,16 @@ def landlord_properties(id):
                 tenant_list = []
                 if unit.unit_status == 6:
                     status = 'Empty'
-                else:
+                elif unit.unit_status == 5:
                     status = 'Occupied'
+                else:
+                    status = 'Undefined'
                 unit_dict = {
                     'unit_id': unit.unit_id,
-                    'unit_status': status,
-                    'tenant_list': tenant_list
+                    'unit_status': status
                 }
+
                 unit_list.append(unit_dict)
-                rental = Rental.query.filter_by(unit_id=unit.unit_id).first()
-                if rental:
-                    tenant = Tenant.query.filter_by(tenant_id=rental.tenant_id).first()
-                    tenant_dict = {
-                        'tenant_first_name': tenant.first_name,
-                        'tenant_last_name': tenant.last_name
-                    }
-                    tenant_list.append(tenant_dict)
-                    unit_list.append(tenant_list)
-            block_list.append(unit_list)
-        properties_list.append(block_list)
     return jsonify({'data': properties_list})
 
 

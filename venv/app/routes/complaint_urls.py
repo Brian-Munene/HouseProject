@@ -306,7 +306,8 @@ def landlord_complaints(id):
                 complaints_list = []
                 for complaint in complaints:
                     complaint_dict = {
-                        'property_id': property.property_id,
+                        'complaint_id': complaint.complaint_id,
+                        'property_name': property.property_name,
                         'block_id': block.block_id,
                         'unit_id': unit.unit_id,
                         'unit_status': status,
@@ -316,7 +317,7 @@ def landlord_complaints(id):
                         'fixed_date': complaint.fixed_date
                     }
                     complaints_list.append(complaint_dict)
-        property_list.append(complaints_list)
+                    property_list.append(complaints_list)
     return jsonify(property_list), 200
         
 
