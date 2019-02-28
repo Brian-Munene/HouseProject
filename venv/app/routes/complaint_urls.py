@@ -78,13 +78,25 @@ def view_single_complaint(id):
             'status': 'failed'
         }
         return jsonify(response_object), 400
-
+    services = Services.query.filter_by(complaint_id=complaint.complaint_id).all()
+    service_list = []
+    total_cost = 0
+    for service in services:
+        service_dict = {
+            'service_id': service.service_id,
+            'provider_id': service.provider_id,
+            'cost': service.cost
+        }
+        service_list.append(service_dict)
+        total_cost = total_cost + service.cost
+    service_total_cost = total_cost
     complaint_dict = {
             'date_posted': complaint.date_posted,
             'message': complaint.message,
             'due_date': complaint.due_date,
             'fixed_date': complaint.fixed_date,
-            'unit_id': complaint.unit_id
+            'unit_id': complaint.unit_id,
+            'total_service_cost': service_total_cost
         }
     return jsonify({'data': complaint_dict})
 
@@ -295,16 +307,44 @@ def landlord_complaints(id):
     property_list = []
     for property in properties:
         blocks = Block.query.filter_by(property_id=property.property_id).all()
+        block_list = []
+        property_dict = {
+            'property_name': property.property_name,
+            # 'block_list': block_list
+        }
+        property_list.append(property_dict)
         for block in blocks:
             units = Unit.query.filter_by(block_id=block.block_id).all()
+            unit_list = []
+            block_dict = {
+                'block_name': block.block_name,
+                # 'unit_list': unit_list
+            }
+            block_list.append(block_dict)
             for unit in units:
                 if unit.unit_status == 6:
                     status = 'Vacant'
-                else:
+                elif unit.unit_status == 5:
                     status = 'Occupied'
                 complaints = Complaint.query.filter_by(unit_id=unit.unit_id).all()
                 complaints_list = []
+                unit_dict = {
+                    # 'complaint_list': complaints_list
+                }
+                unit_list.append(unit_dict)
                 for complaint in complaints:
+                    services = Services.query.filter_by(complaint_id=complaint.complaint_id).all()
+                    service_list = []
+                    total_cost = 0
+                    for service in services:
+                        service_dict = {
+                            'service_id': service.service_id,
+                            'provider_id': service.provider_id,
+                            'cost': service.cost
+                        }
+                        service_list.append(service_dict)
+                        total_cost = total_cost + service.cost
+                    service_total_cost = total_cost
                     complaint_dict = {
                         'complaint_id': complaint.complaint_id,
                         'property_name': property.property_name,
@@ -314,10 +354,11 @@ def landlord_complaints(id):
                         'date_posted': complaint.date_posted,
                         'message': complaint.message,
                         'due_date': complaint.due_date,
-                        'fixed_date': complaint.fixed_date
+                        'fixed_date': complaint.fixed_date,
+                        'total_service_cost': service_total_cost
                     }
-                    complaints_list.append(complaint_dict)
-                    property_list.append(complaints_list)
+
+                    property_list.append(complaint_dict)
     return jsonify(property_list), 200
         
 
