@@ -26,16 +26,18 @@ class User(db.Model):
     __tablename__ = 'users'
 
     user_id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.String(70), nullable=False, unique=True)
     email = db.Column(db.String(100), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     category = db.Column(db.String(30), nullable=False)
-    account_status = db.Column(db.Integer, nullable=False)
+    account_status = db.Column(db.String(75), nullable=False)
 
     # blocks = db.relationship('Block', backref='users', lazy=True)
     # rental = db.relationship('Rental', backref='users', lazy=True)
     # complaints = db.relationship('Complaint', backref='users', lazy=True)
 
-    def __init__(self, email, category, account_status):
+    def __init__(self, email, category, account_status, public_id):
+        self.public_id = public_id
         self.category = category
         self.email = email
         self.account_status = account_status

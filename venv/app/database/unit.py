@@ -8,14 +8,16 @@ class Unit(db.Model):
     __tablename__ = 'units'
 
     unit_id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.String(70), nullable=False, unique=True)
     block_id = db.Column(db.Integer, db.ForeignKey('blocks.block_id'), nullable=True)
-    unit_status = db.Column(db.Integer, nullable=False)
+    unit_status = db.Column(db.String(75), nullable=False)
 
     # Relationships
     rentals = db.relationship('Rental', backref='units', lazy=True)
     complaints = db.relationship('Complaint', backref='units', lazy=True)
 
-    def __init__(self, block_id, unit_status):
+    def __init__(self, block_id, unit_status, public_id):
+        self.public_id = public_id
         self.block_id = block_id
         self.unit_status = unit_status
 

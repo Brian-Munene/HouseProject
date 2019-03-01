@@ -11,7 +11,7 @@ from database.block import Block
 from database.rental import Rental
 from database.block import Tenant
 from database.block import Lease
-from database.block import Transactions
+from database.block import Payment
 from database.block import Caretaker
 from database.user import User
 

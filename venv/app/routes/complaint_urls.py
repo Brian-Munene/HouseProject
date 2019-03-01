@@ -1,6 +1,6 @@
 from flask import Flask, session, logging, request, json, jsonify
 from datetime import datetime
-import arrow
+import uuid
 #file imports
 from routes import app
 from routes import db
@@ -16,7 +16,6 @@ from database.block import Services
 from database.user import User
 from database.block import PropertyManager
 from database.block import Landlord
-#from database.rental import Image
 
 
 #Create a complaint route

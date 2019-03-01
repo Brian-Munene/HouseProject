@@ -6,11 +6,13 @@ class Notification(db.Model):
     __tablename__ = 'notifications'
 
     notification_id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.String(70), nullable=False, unique=True)
     notification_message = db.Column(db.Text(255), nullable=False)
     notification_recipient_id = db.Column(db.Integer, nullable=False)
     notification_type = db.Column(db.String(75), nullable=False)
 
-    def __int__(self, notification_message, notification_recipient_id, notification_type):
+    def __int__(self, notification_message, notification_recipient_id, notification_type, public_id):
+        self.public_id = public_id
         self.notification_message = notification_message
         self.notification_recipient_id = notification_recipient_id
         self.notification_type = notification_type

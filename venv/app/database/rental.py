@@ -9,11 +9,13 @@ class Rental(db.Model):
     __tablename__ = 'rentals'
     
     rental_id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.String(70), nullable=False, unique=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.tenant_id'), nullable=False)
     unit_id = db.Column(db.Integer, db.ForeignKey('units.unit_id'), nullable=False)
     lease_id = db.Column(db.Integer, db.ForeignKey('leases.lease_id'), nullable=False)
     
-    def __init__(self, tenant_id, unit_id, lease_id):
+    def __init__(self, tenant_id, unit_id, lease_id, public_id):
+        self.public_id = public_id
         self.tenant_id = tenant_id
         self.unit_id = unit_id
         self.lease_id = lease_id

@@ -6,13 +6,14 @@ from routes import app
 from routes import db
 from database.complaint import Complaint
 from database.images import Image
-from database.block import Transactions
+from database.block import Payment
 from database.unit import Unit
+from database.rental import Rental
 
 
-#Insert transaction
-@app.route('/InsertTransaction', methods=['POST'])
-def insert_transaction():
+#Insert payment
+@app.route('/InsertPayment', methods=['POST'])
+def insert_payment():
     request_json = request.get_json()
     unit_id = request_json.get('unit_id')
     date_paid = request_json.get('date_paid')
@@ -23,13 +24,17 @@ def insert_transaction():
         return jsonify({'message': 'No such unit.'}), 422
     if not Unit.query.filter_by(unit_status=6):
         return jsonify({'message': 'That unit is currently empty'}), 422
-    transaction = Transactions(unit_id, amount_paid, date_paid)
-    db.session.add(transaction)
+    payment = Payments(unit_id, amount_paid, date_paid)
+    db.session.add(payment)
     db.session.commit()
+    rental = Rental.query.filter_by(unit_id=unit_id).first()
+    tenant_id = rental.tenant_id
+    lease_id = rental.lease_id
+
     response_object = {
-        'unit_id': transaction.unit_id,
-        'amount_paid': transaction.amount_paid,
-        'date_paid': transaction.date_paid
+        'unit_id': payment.unit_id,
+        'amount_paid': payment.amount_paid,
+        'date_paid': payment.date_paid
     }
     return jsonify(response_object), 201
 

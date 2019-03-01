@@ -5,6 +5,7 @@ from datetime import datetime
 class Complaint(db.Model):
     __tablename__ = 'complaints'
     complaint_id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.String(70), nullable=False, unique=True)
     date_posted = db.Column(db.DateTime, nullable=False)
     message = db.Column(db.Text(75), nullable=False)
     due_date = db.Column(db.Date, nullable=True)
@@ -15,7 +16,8 @@ class Complaint(db.Model):
     services = db.relationship('Services', backref='complaints', lazy=True)
     images = db.relationship('Image', backref='complaints', lazy=True)
 
-    def __init__(self, message, due_date, fixed_date, unit_id):
+    def __init__(self, message, due_date, fixed_date, unit_id, public_id):
+        self.public_id = public_id
         self.date_posted = datetime.now()
         self.message = message
         self.due_date = due_date

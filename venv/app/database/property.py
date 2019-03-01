@@ -6,6 +6,7 @@ class Property(db.Model):
     __tablename__ = 'property'
 
     property_id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.String(70), nullable=False, unique=True)
     property_name = db.Column(db.String(75), nullable=False)
     property_manager_id = db.Column(db.Integer, db.ForeignKey('property_managers.property_manager_id'), nullable=False)
     landlord_id = db.Column(db.Integer, db.ForeignKey('landlords.landlord_id'), nullable=False)
@@ -13,7 +14,8 @@ class Property(db.Model):
     # Relationships
     blocks = db.relationship('Block', backref='property', lazy=True)
 
-    def __init__(self, property_name, property_manager_id, landlord_id):
+    def __init__(self, property_name, property_manager_id, landlord_id, public_id):
+        self.public_id = public_id
         self.property_manager_id = property_manager_id
         self.property_name = property_name
         self.landlord_id = landlord_id

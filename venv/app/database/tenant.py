@@ -6,6 +6,7 @@ class Tenant(db.Model):
     __tablename__ = 'tenants'
 
     tenant_id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.String(70), nullable=False, unique=True)
     first_name = db.Column(db.String(75), nullable=False)
     last_name = db.Column(db.String(75), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
@@ -14,7 +15,8 @@ class Tenant(db.Model):
     #Relationships
     rentals = db.relationship('Rental', backref='tenants', lazy=True)
 
-    def __init__(self, first_name, last_name, email, phone):
+    def __init__(self, first_name, last_name, email, phone, public_id):
+        self.public_id = public_id
         self.first_name = first_name
         self.last_name = last_name
         self.email = email

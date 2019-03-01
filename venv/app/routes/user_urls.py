@@ -1,6 +1,7 @@
 from flask import Flask, url_for, session, g, logging, request, json, jsonify
 from flask_httpauth import HTTPBasicAuth
 from datetime import datetime, timedelta
+import uuid
 from passlib.hash import sha256_crypt
 #file imports
 from routes import app
@@ -14,6 +15,7 @@ from database.block import PropertyManager
 from database.block import Lease
 from database.rental import Rental
 from database.unit import Unit
+from database.block import Status
 
 auth = HTTPBasicAuth()
 
@@ -29,7 +31,9 @@ def register():
         first_name = request_json.get('first_name')
         last_name = request_json.get('last_name')
         phone = request_json.get('PhoneNumber')
-        if email is None or password is None or category is None:
+        user_public_id = str(uuid.uuid4())
+        status_active = Status.query.filter_by(status_code=3).first
+        if email is None or password is None or category is None or first_name is None or last_name is None:
             return jsonify({'message': 'Fill all details'}), 400   # missing arguments
         if User.query.filter_by(email=email).first() is not None:
             return jsonify({'message': 'User exists'}), 400   # existing user
@@ -41,37 +45,40 @@ def register():
             promises = request_json.get('promises')
             service_charges = request_json.get('service_charges')
             notes = request_json.get('notes')
-            lease_status = 3
+            lease_public_id = str(uuid.uuid4())
+            lease_status = status_active.status_meaning
             payment_interval = request_json.get('payment_interval')
-            if not Unit.query.filter_by(unit_id=unit_id, unit_status=6).first():
+            if not Unit.query.filter_by(unit_id=unit_id, unit_status='Empty').first():
                 return jsonify({'message': 'Unit unavailable'})
-            lease = Lease(lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes, lease_status, payment_interval)
+            lease = Lease(lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes, lease_status,
+                          payment_interval, lease_public_id)
             db.session.add(lease)
             db.session.flush()
-            tenant = Tenant(first_name, last_name, email, phone)
+            tenant_public_id = str(uuid.uuid4())
+            tenant = Tenant(first_name, last_name, email, phone, tenant_public_id)
             db.session.add(tenant)
             db.session.commit()
-            rental = Rental(tenant.tenant_id, unit_id, lease.lease_id)
+            rental_public_id = str(uuid.uuid4())
+            rental = Rental(tenant.tenant_id, unit_id, lease.lease_id, rental_public_id)
             db.session.add(rental)
             db.session.commit()
-            account_status = 3
-            user = User(email, category, account_status)
+            account_status = status_active.status_meaning
+            user = User(email, category, account_status, user_public_id)
             user.hash_password(password)
             db.session.add(user)
             db.session.commit()
             unit = Unit.query.get(unit_id)
-            unit.unit_status = 5
+            unit.unit_status = Status.query.filter_by(status_code=5).first()
             db.session.commit()
-            if lease.lease_status == 3:
-                status = 'Active'
             response_object = {'message': "Your Tenant account has been created.",
                                'email': user.email,
-                               'account_status': 'active',
+                               'public_id': user.public_id,
+                               'account_status': status_active,
                                'lease_begin_date': lease.lease_begin_date,
                                'lease_end_date': lease.lease_end_date,
                                'lease_amount': lease.lease_amount,
                                'unit_id': rental.unit_id,
-                               'lease_status': status,
+                               'lease_status': status_active,
                                'unit_status': unit.unit_status,
                                'service_charges': lease.service_charges,
                                'payment_interval': lease.payment_interval,
@@ -79,27 +86,26 @@ def register():
                             }
             return jsonify(response_object), 201
         elif category == 'landlord':
-            landlord = Landlord(first_name, last_name, email, phone)
+            landlord_public_id = str(uuid.uuid4())
+            landlord = Landlord(first_name, last_name, email, phone, landlord_public_id)
             db.session.add(landlord)
             db.session.commit()
-
-            account_status = 3
-            user = User(email, category, account_status)
+            user = User(email, category, status_active, user_public_id)
             user.hash_password(password)
             db.session.add(user)
             db.session.commit()
             response_object = {'message': "Your Landlord account has been created.",
                                'email': user.email,
+                               'public_id': user.public_id,
                                'account_status': 'active'}
             return jsonify(response_object), 201
         elif category == 'caretaker':
             property_id = request_json.get('property_id')
-            caretaker = Caretaker(property_id, first_name, last_name, email, phone)
+            caretaker_public_id = str(uuid.uuid4())
+            caretaker = Caretaker(property_id, first_name, last_name, email, phone, caretaker_public_id)
             db.session.add(caretaker)
             db.session.commit()
-
-            account_status = 3
-            user = User(email, category, account_status)
+            user = User(email, category, status_active, user_public_id)
             user.hash_password(password)
             db.session.add(user)
             db.session.commit()
@@ -108,12 +114,11 @@ def register():
                                'account_status': 'active'}
             return jsonify(response_object), 201
         elif category == 'property manager':
-            manager = PropertyManager(first_name, last_name, email, phone)
+            manager_public_id = str(uuid.uuid4())
+            manager = PropertyManager(first_name, last_name, email, phone, manager_public_id)
             db.session.add(manager)
             db.session.commit()
-
-            account_status = 3
-            user = User(email, category, account_status)
+            user = User(email, category, status_active, user_public_id)
             user.hash_password(password)
             db.session.add(user)
             db.session.commit()
@@ -256,7 +261,8 @@ def login():
 #View all users
 @app.route('/users')
 def users():
-    users = User.query.filter_by(account_status=3).all()
+    status_active = Status.query.filter_by(status_code=3).first
+    users = User.query.filter_by(account_status=status_active.status_meaning).all()
     usersList = []
     for user in users:
         users_dict = {
@@ -289,7 +295,7 @@ def user(id):
 #Delete a user
 
 
-@app.route('/deleteuser', methods=['POST', 'GET'])
+@app.route('/DeleteUser', methods=['POST', 'GET'])
 def delete_user():
     if request.method == 'POST':
         request_json = request.get_json()
@@ -304,12 +310,14 @@ def delete_user():
 
 #Update  username
 
-@app.route('/updateuser', methods=['POST', 'GET'])
-def update_user():
+@app.route('/UpdateUser/<public_id>', methods=['POST', 'GET'])
+def update_user(public_id):
     if request.method == 'POST':
+        user = User.query.filter_by(public_id=public_id).first()
+        if not user:
+            return jsonify({'message': 'No such user'}), 400
         request_json = request.get_json()
-        
-        current_email = request_json.get('email')
+        current_email = user.email
         new_email = request_json.get('new_email')
         
         user = User.query.filter_by(email=current_email, account_status=3).first()
@@ -320,28 +328,44 @@ def update_user():
                 db.session.flush()
                 user.email = new_email
                 db.session.commit()
-                return jsonify({'message': 'Email updated!'}), 200
+                response_object = {'message': 'Email updated!',
+                                   'from': current_email,
+                                   'to': user.email
+                                   }
+                return jsonify(response_object), 200
             elif user.category == 'caretaker':
                 caretaker = Caretaker.query.filter_by(email=current_email).first()
                 caretaker.email = new_email
                 db.session.flush()
                 user.email = new_email
                 db.session.commit()
-                return jsonify({'message': 'Email updated!'}), 200
+                response_object = {'message': 'Email updated!',
+                                'from': current_email,
+                                'to':user.email
+                                   }
+                return jsonify(response_object), 200
             elif user.category == 'property manager':
                 manager = PropertyManager.query.filter_by(email=current_email).first()
                 manager.email = new_email
                 db.session.flush()
                 user.email = new_email
                 db.session.commit()
-                return jsonify({'message': 'Email updated!'}), 200
+                response_object = {'message': 'Email updated!',
+                                   'from': current_email,
+                                   'to': user.email
+                                   }
+                return jsonify(response_object), 200
             elif user.category == 'landlord':
                 landlord = Landlord.query.filter_by(email=current_email).first()
                 landlord.email = new_email
                 db.session.flush()
                 user.email = new_email
                 db.session.commit()
-                return jsonify({'message': 'Email updated!'}), 200
+                response_object = {'message': 'Email updated!',
+                                   'from': current_email,
+                                   'to': user.email
+                                   }
+                return jsonify(response_object), 200
 
     return 'Invalid Method', 400
 
