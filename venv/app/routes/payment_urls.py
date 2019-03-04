@@ -19,12 +19,12 @@ def insert_payment():
     date_paid = request_json.get('date_paid')
     amount_paid = request_json.get('amount_paid')
     if unit_id is None or date_paid is None or amount_paid is None:
-        return jsonify({'message': 'YOu have empty fields.'}), 400
+        return jsonify({'message': 'You have empty fields.'}), 400
     if not Unit.query.get(unit_id):
         return jsonify({'message': 'No such unit.'}), 422
-    if not Unit.query.filter_by(unit_status=6):
+    if not Unit.query.filter_by(unit_status='Empty'):
         return jsonify({'message': 'That unit is currently empty'}), 422
-    payment = Payments(unit_id, amount_paid, date_paid)
+    payment = Payment(unit_id, amount_paid, date_paid)
     db.session.add(payment)
     db.session.commit()
     rental = Rental.query.filter_by(unit_id=unit_id).first()

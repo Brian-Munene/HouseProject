@@ -17,9 +17,9 @@ def view_landlords():
 	for landlord in landlords:
 		name = landlord.first_name + ' ' + landlord.last_name
 		landlord_dict = {
-			'email': landlord.email,
 			'name': name,
-			'id': landlord.landlord_id
+			'id': landlord.landlord_id,
+
 		}
 		landlord_list.append(landlord_dict)
 	return jsonify(landlord_list), 200

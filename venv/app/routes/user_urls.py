@@ -16,6 +16,8 @@ from database.block import Lease
 from database.rental import Rental
 from database.unit import Unit
 from database.block import Status
+from database.block import Property
+from database.block import Debt
 
 auth = HTTPBasicAuth()
 
@@ -32,8 +34,9 @@ def register():
         last_name = request_json.get('last_name')
         phone = request_json.get('PhoneNumber')
         user_public_id = str(uuid.uuid4())
-        status_active = Status.query.filter_by(status_code=3).first
-        if email is None or password is None or category is None or first_name is None or last_name is None:
+        status_active = Status.query.filter_by(status_code=3).first()
+        account_status = status_active.status_meaning
+        if email is None or password is None or category is None or first_name is None or last_name is None or phone is None:
             return jsonify({'message': 'Fill all details'}), 400   # missing arguments
         if User.query.filter_by(email=email).first() is not None:
             return jsonify({'message': 'User exists'}), 400   # existing user
@@ -54,6 +57,15 @@ def register():
                           payment_interval, lease_public_id)
             db.session.add(lease)
             db.session.flush()
+            total_lease_amounnt = lease.lease_amount + lease.service_charges
+            user = User(email, category, account_status, user_public_id)
+            user.hash_password(password)
+            db.session.add(user)
+            db.session.commit()
+
+            debt = Debt(total_lease_amounnt, paid_amount, debt_status, debt_public_id)
+            db.session.add(debt)
+            db.session.commit()
             tenant_public_id = str(uuid.uuid4())
             tenant = Tenant(first_name, last_name, email, phone, tenant_public_id)
             db.session.add(tenant)
@@ -62,27 +74,23 @@ def register():
             rental = Rental(tenant.tenant_id, unit_id, lease.lease_id, rental_public_id)
             db.session.add(rental)
             db.session.commit()
-            account_status = status_active.status_meaning
-            user = User(email, category, account_status, user_public_id)
-            user.hash_password(password)
-            db.session.add(user)
-            db.session.commit()
             unit = Unit.query.get(unit_id)
-            unit.unit_status = Status.query.filter_by(status_code=5).first()
+            status = Status.query.filter_by(status_code=5).first()
+            unit.unit_status = status.status_meaning
             db.session.commit()
             response_object = {'message': "Your Tenant account has been created.",
                                'email': user.email,
                                'public_id': user.public_id,
-                               'account_status': status_active,
+                               'account_status': account_status,
                                'lease_begin_date': lease.lease_begin_date,
                                'lease_end_date': lease.lease_end_date,
                                'lease_amount': lease.lease_amount,
                                'unit_id': rental.unit_id,
-                               'lease_status': status_active,
+                               'lease_status': account_status,
                                'unit_status': unit.unit_status,
                                'service_charges': lease.service_charges,
                                'payment_interval': lease.payment_interval,
-                               'total_lease_amount': str(lease.lease_amount + lease.service_charges)
+                               'total_lease_amount': str(total_lease_amount)
                             }
             return jsonify(response_object), 201
         elif category == 'landlord':
@@ -90,41 +98,46 @@ def register():
             landlord = Landlord(first_name, last_name, email, phone, landlord_public_id)
             db.session.add(landlord)
             db.session.commit()
-            user = User(email, category, status_active, user_public_id)
+            user = User(email, category, account_status, user_public_id)
             user.hash_password(password)
             db.session.add(user)
             db.session.commit()
             response_object = {'message': "Your Landlord account has been created.",
                                'email': user.email,
                                'public_id': user.public_id,
-                               'account_status': 'active'}
+                               'account_status': account_status,
+                               'landlord_public_id': landlord.public_id
+                               }
             return jsonify(response_object), 201
         elif category == 'caretaker':
-            property_id = request_json.get('property_id')
+            property_public_id = request_json.get('property_public_id')
+            property = Property.query.filter_by(public_id=property_public_id).first()
             caretaker_public_id = str(uuid.uuid4())
-            caretaker = Caretaker(property_id, first_name, last_name, email, phone, caretaker_public_id)
+            caretaker = Caretaker(property.property_id, first_name, last_name, email, phone, caretaker_public_id)
             db.session.add(caretaker)
             db.session.commit()
-            user = User(email, category, status_active, user_public_id)
+            user = User(email, category, account_status, user_public_id)
             user.hash_password(password)
             db.session.add(user)
             db.session.commit()
             response_object = {'message': "Your Caretaker account has been created.",
                                'email': user.email,
-                               'account_status': 'active'}
+                               'account_status': account_status,
+                               'public_id': user.public_id}
             return jsonify(response_object), 201
         elif category == 'property manager':
             manager_public_id = str(uuid.uuid4())
             manager = PropertyManager(first_name, last_name, email, phone, manager_public_id)
             db.session.add(manager)
             db.session.commit()
-            user = User(email, category, status_active, user_public_id)
+            user = User(email, category, account_status, user_public_id)
             user.hash_password(password)
             db.session.add(user)
             db.session.commit()
             response_object = {'message': "Your Property manager account has been created.",
                                'email': user.email,
-                               'account_status': 'active'}
+                               'account_status': account_status,
+                               'public_id': user.public_id}
             return jsonify(response_object), 201
         else:
             return jsonify({'error': 'Not a valid category'})
@@ -136,12 +149,11 @@ def register():
 def login():
     try:
         request_json = request.get_json()
-
         email = request_json.get('email')
         password = request_json.get('password')
         if email is None or password is None:
             return "Missing arguments", 400   # missing arguments
-        user = User.query.filter_by(email=email, account_status=3).first()
+        user = User.query.filter_by(email=email, account_status='Active').first()
         if user and user.verify_password(password):
 	        if user.category == 'tenant':
 		        tenant = Tenant.query.filter_by(email=email).first()
@@ -150,7 +162,7 @@ def login():
 		        response_object = {
 			        'message': 'Successfully Logged in.',
 			        'status': 'success',
-			        'public_id': user.user_id,
+			        'public_id': user.public_id,
 			        'user_type': user.category,
 			        'firstname': tenant.first_name,
 			        'lastname': tenant.last_name,
@@ -165,7 +177,7 @@ def login():
 		        response_object = {
 			        'message': 'Successfully Logged in.',
 			        'status': 'success',
-			        'public_id': user.user_id,
+			        'public_id': user.public_id,
 			        'user_type': user.category,
 			        'firstname': landlord.first_name,
 			        'lastname': landlord.last_name,
@@ -178,7 +190,7 @@ def login():
 		        response_object = {
 			        'message': 'Successfully Logged in.',
 			        'status': 'success',
-			        'public_id': user.user_id,
+			        'public_id': user.public_id,
 			        'user_type': user.category,
 			        'firstname': caretaker.first_name,
 			        'lastname': caretaker.last_name,
@@ -191,7 +203,7 @@ def login():
 		        response_object = {
 			        'message': 'Successfully Logged in.',
 			        'status': 'success',
-			        'public_id': user.user_id,
+			        'public_id': user.public_id,
 			        'user_type': user.category,
 			        'firstname': manager.first_name,
 			        'lastname': manager.last_name,
@@ -276,16 +288,15 @@ def users():
 
 #View a single user
 
-@app.route('/user/<id>/')
-def user(id):
+@app.route('/user/<public_id>/')
+def user(public_id):
 
-    user = User.query.get(id)
-    if user.account_status == 3:
-        status = 'Active'
+    user = User.query.filter_by(public_id=public_id).first()
+    if user.account_status == 'Active':
         user_dict = {
             'email': user.email,
             'category': user.category,
-            'account_status': status
+            'account_status': user.account_status
         }
         return jsonify({'data': user_dict})
     else:
@@ -295,17 +306,12 @@ def user(id):
 #Delete a user
 
 
-@app.route('/DeleteUser', methods=['POST', 'GET'])
-def delete_user():
-    if request.method == 'POST':
-        request_json = request.get_json()
-        email = request_json.get('email')
-        user = User.query.filter_by(email=email).first()
-        db.session.delete(user)
-        db.session.commit()
-
-        return 'The user has been deleted!', 200
-    return 'Invalid Method', 400
+@app.route('/DeleteUser/<public_id>')
+def delete_user(public_id):
+    user = User.query.filter_by(public_id=public_id).first()
+    db.session.delete(user)
+    db.session.commit()
+    return 'The user has been deleted!', 200
 
 
 #Update  username

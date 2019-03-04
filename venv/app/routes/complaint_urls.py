@@ -26,11 +26,12 @@ def create_complaint():
     due_date = request_json.get('due_date')
     fixed_date = request_json.get('fixed_date')
     unit_id = request_json.get('unit_id')
+    complaint_public_id = str(uuid.uuid4())
     if message is None or due_date is None or unit_id is None:
         return jsonify({'message', 'Fields should not be null.'}), 422
     if not Unit.query.get(unit_id):
         return jsonify({'message': 'Unit does not exist.'}), 400
-    complaint = Complaint(message, due_date, fixed_date, unit_id)
+    complaint = Complaint(message, due_date, fixed_date, unit_id, complaint_public_id)
     db.session.add(complaint)
     db.session.commit()
     response_object = {
@@ -40,8 +41,8 @@ def create_complaint():
         'due_date': complaint.due_date,
         'fixed_date': complaint.fixed_date,
         'unit_id': complaint.unit_id,
-	    'complaint_id': complaint.complaint_id
-    }
+        'public_id': complaint.public_id
+        }
     return jsonify(response_object), 201
 
 
@@ -51,9 +52,9 @@ def view_complaints():
     if not complaints:
         response_object = {
             'message': 'No complaints',
-            'status': 'failed'
+            'status': 'success'
         }
-        return jsonify(response_object), 401
+        return jsonify(response_object), 200
     complaintList = []
     for complaint in complaints:
 
@@ -62,15 +63,16 @@ def view_complaints():
             'message': complaint.message,
             'due_date': complaint.due_date,
             'fixed_date': complaint.fixed_date,
-            'complaint_id': complaint.complaint_id
+            'complaint_id': complaint.complaint_id,
+            'public_id': complaint.public_id
         }
         complaintList.append(complaint_dict)
     return jsonify({'data': complaintList})
 
 
-@app.route('/ViewSingleComplaint/<id>/')
-def view_single_complaint(id):
-    complaint = Complaint.query.get(id)
+@app.route('/ViewSingleComplaint/<public_id>')
+def view_single_complaint(public_id):
+    complaint = Complaint.query.filter_by(public_id=public_id).first()
     if not complaint:
         response_object = {
             'message': 'No record of that complaint.',
@@ -91,6 +93,7 @@ def view_single_complaint(id):
     service_total_cost = total_cost
     complaint_dict = {
             'date_posted': complaint.date_posted,
+            'public_id': complaint.public_id,
             'message': complaint.message,
             'due_date': complaint.due_date,
             'fixed_date': complaint.fixed_date,
@@ -100,15 +103,15 @@ def view_single_complaint(id):
     return jsonify({'data': complaint_dict})
 
 
-@app.route('/UpdateComplaint', methods=['POST'])
-def update_complaint():
+# Update Complaint using complaint's public_id
+@app.route('/UpdateComplaint/<public_id>', methods=['POST'])
+def update_complaint(public_id):
     request_json = request.get_json()
-    complaint_id = request_json.get('id')
     new_message = request_json.get('new_message')
     new_due_date = request_json.get('new_due_date')
     fixed_date = request_json.get('fixed_date')
 
-    complaint = Complaint.query.filter_by(complaint_id=complaint_id).first()
+    complaint = Complaint.query.filter_by(public_id=public_id).first()
 
     if new_message and new_due_date:
         complaint.due_date = new_due_date
@@ -130,21 +133,23 @@ def update_complaint():
         return "Complaint has been fixed!", "success"
 
 
-# Service performed on a complaint using complaint_id
-@app.route('/ServiceComplaint/<id>/', methods=['POST'])
-def service_complaint(id):
+# Service performed on a complaint using complaint's public_id
+@app.route('/ServiceComplaint/<public_id>', methods=['POST'])
+def service_complaint(public_id):
     response_json = request.get_json()
     cost = response_json.get('cost')
     provider_id = response_json.get('provider_id')
+    service_public_id = str(uuid.uuid4())
     if cost is None:
         return jsonify({'message': 'Fields should not be null'}), 400
     # Insert Service done
     provider = ServiceProviders.query.get(provider_id)
-    service = Services(id, provider.provider_id, cost)
+    if not provider:
+        return jsonify({'message': 'No such provider'})
+    complaint = Complaint.query.filter_by(public_id=public_id).first()
+    service = Services(complaint.complaint_id, provider.provider_id, cost, service_public_id)
     db.session.add(service)
     db.session.commit()
-
-    complaint = Complaint.query.filter_by(complaint_id=id).first()
     complaint.fixed_date = service.fixed_date
     db.session.commit()
     response_object = {
@@ -158,70 +163,66 @@ def service_complaint(id):
     return jsonify(response_object), 200
 
 
-#Delete a complaint using the complaint_id
-@app.route('/DeleteComplaint/<id>/', methods=['DELETE'])
-def delete_complaint(id):
-    complaint = Complaint.query.get(id)
+#Delete a complaint using the complaint's public_id
+@app.route('/DeleteComplaint/<public_id>', methods=['DELETE'])
+def delete_complaint(public_id):
+    complaint = Complaint.query.filter_by(public_id=public_id).first()
     db.session.delete(complaint)
     db.session.commit()
     return "Complaint has been deleted!", "Success"
 
 
-#Find the complaint of a single unit using unit_id
-@app.route('/UnitComplaints/<id>')
-def unit_complaints(id):
-    complaints = Complaint.query.filter_by(unit_id=id).all()
+#Find the complaint of a single unit using unit's public_id
+@app.route('/UnitComplaints/<public_id>')
+def unit_complaints(public_id):
+    unit = Unit.query.filter_by(public_id=public_id).first()
+    complaints = Complaint.query.filter_by(unit_id=unit.unit_id).all()
     complaintList = []
     for complaint in complaints:
         complaint_dict = {
             'date_posted': complaint.date_posted,
             'message': complaint.message,
             'due_date': complaint.due_date,
-            'fixed_date': complaint.fixed_date
+            'fixed_date': complaint.fixed_date,
+            'public_id': complaint.public_id
         }
         complaintList.append(complaint_dict)
     return jsonify({'data': complaintList})
 
 
-#Block Complaints using block_id
-@app.route('/BlockComplaints/<id>/')
-def block_complaints(id):
+#Block Complaints using block's public_id
+@app.route('/BlockComplaints/<public_id>')
+def block_complaints(public_id):
     # Blocks
-    blocks = Block.query.filter_by(block_id=id).all()
-    if not blocks:
+    block = Block.query.filter_by(public_id=public_id).first()
+    if not block:
         return jsonify({'message': 'No such block.'}), 400
     block_complaints = []
-    for block in blocks:
-        units = Unit.query.filter_by(block_id=block.block_id).all()
-        units_array = []
-        for unit in units:
-            if unit.unit_status == 6:
-                status = 'Empty'
-            else:
-                status = 'Occupied'
-            units_array.append(unit.unit_id)
+    units = Unit.query.filter_by(block_id=block.block_id).all()
+    for unit in units:
+        complaints = Complaint.query.filter_by(unit_id=unit.unit_id).all()
+        for complaint in complaints:
+            complaint_dict = {
+                'unit_id': unit.unit_id,
+                'unit_status': unit.unit_status,
+                'complaint_id': complaint.complaint_id,
+                'date_posted': complaint.date_posted,
+                'message': complaint.message,
+                'due_date': complaint.due_date,
+                'fixed_date': complaint.fixed_date,
+                'public_id': complaint.public_id
+            }
+            # complaint_list.append()
+            block_complaints.append(complaint_dict)
+            # complaint_list = []
 
-            for unit in units_array:
-                complaints = Complaint.query.filter_by(unit_id=unit).all()
-                # complaint_list = []
-                for complaint in complaints:
-                    complaint_dict = {
-                        'unit_id': unit,
-                        'unit_status': status,
-                        'date_posted': complaint.date_posted,
-                        'message': complaint.message,
-                        'due_date': complaint.due_date,
-                        'fixed_date': complaint.fixed_date
-                    }
-                    # complaint_list.append()
-                    block_complaints.append(complaint_dict)
     return jsonify({'data': block_complaints}), 200
 
 
-# Property manager Complaints using user_id
-@app.route('/PropertyManagerComplaints/<id>/')
-def property_manager_complaints(id):
-    user = User.query.get(id)
+# Property manager Complaints using user's public_id
+@app.route('/PropertyManagerComplaints/<public_id>')
+def property_manager_complaints(public_id):
+    user = User.query.filter_by(public_id=public_id).first()
     manager = PropertyManager.query.filter_by(email=user.email).first()
     # fetch Property using property manager id
     properties = Property.query.filter_by(manager_id=manager.manager_id).all()
@@ -242,6 +243,7 @@ def property_manager_complaints(id):
                 for complaint in complaints:
                     complaint_dict = {
                         'complaint_id': complaint.complaint_id,
+                        'complaint_public_id': complaint.public_id,
                         'property_id': property.property_id,
                         'block_id': block.block_id,
                         'unit_id': unit.unit_id,
@@ -256,12 +258,11 @@ def property_manager_complaints(id):
     return jsonify(property_list), 200
 
 
-# Caretaker assigned complaints using user_id
-@app.route('/CaretakerComplaints/<id>/')
-def caretaker_complaints(id):
-    user = User.query.get(id)
+# Caretaker assigned complaints using user's public_id
+@app.route('/CaretakerComplaints/<public_id>')
+def caretaker_complaints(public_id):
+    user = User.query.filter_by(public_id=public_id).first()
     caretaker = Caretaker.query.filter_by(email=user.email).first()
-    caretaker = Caretaker.query.get(caretaker.caretaker_id)
     if not caretaker:
         return jsonify({'message': 'You are not a caretaker'}), 400
     caretaker_property = Property.query.filter_by(property_id=caretaker.property_id).first()
@@ -280,6 +281,8 @@ def caretaker_complaints(id):
             complaints_list = []
             for complaint in complaints:
                 complaint_dict = {
+                    'complaint_id': complaint.complaint_id,
+                    'public_id': complaint.public_id,
                     'property_id': caretaker_property.property_id,
                     'block_id': block.block_id,
                     'unit_id': unit.unit_id,
@@ -294,10 +297,10 @@ def caretaker_complaints(id):
     return jsonify(property_complaints), 200
 
 
-# Landlord Complaints using user_id
-@app.route('/LandlordComplaints/<id>/')
-def landlord_complaints(id):
-    user = User.query.get(id)
+# Landlord Complaints using user's public_id
+@app.route('/LandlordComplaints/<public_id>/')
+def landlord_complaints(public_id):
+    user = User.query.filter_by(public_id=public_id).first()
     landlord = Landlord.query.filter_by(email=user.email).first()
     # fetch Property using property manager id
     properties = Property.query.filter_by(landlord_id=landlord.landlord_id).all()
@@ -349,7 +352,7 @@ def landlord_complaints(id):
                         'property_name': property.property_name,
                         'block_id': block.block_id,
                         'unit_id': unit.unit_id,
-                        'unit_status': status,
+                        'unit_status': unit.unit_status,
                         'date_posted': complaint.date_posted,
                         'message': complaint.message,
                         'due_date': complaint.due_date,

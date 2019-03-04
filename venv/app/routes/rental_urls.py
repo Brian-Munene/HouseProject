@@ -10,7 +10,6 @@ from database.user import User
 
 @app.route('/InsertRentals', methods = ['GET', 'POST'])
 def insert_rentals():
-	#form = RentalsForm(request.form)
 	if request.method =='POST':
 
 		request_json = request.get_json()
@@ -24,8 +23,8 @@ def insert_rentals():
 		db.session.add(rental)
 		db.session.commit()
 
-		return('Rental details successfully added', 'success')
-	return('Invalid Method')
+		return 'Rental details successfully added', 'success'
+	return 'Invalid Method'
 
 #Read all rentals
 

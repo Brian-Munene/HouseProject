@@ -14,7 +14,7 @@ class Block(db.Model):
     # Relationships
     units = db.relationship('Unit', backref='blocks', lazy=True)
 
-    def __init__(self, property_id, block_name, number_of_units,public_id):
+    def __init__(self, property_id, block_name, number_of_units, public_id):
         self.number_of_units = number_of_units
         self.public_id = public_id
         self.property_id = property_id
@@ -145,7 +145,6 @@ class Payment(db.Model):
     payment_type = db.Column(db.String(30), nullable=False)
     debt_id = db.Column(db.Integer, db.ForeignKey('debts.debt_id'), nullable=False)
     date_paid = db.Column(db.Date, nullable=False)
-    debt_date = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, unit_id, amount_paid, payment_type, date_paid, public_id):
         self.public_id = public_id
@@ -165,6 +164,7 @@ class Debt(db.Model):
     bill_amount = db.Column(db.Float, nullable=False)
     paid_amount = db.Column(db.Float, nullable=False, default=0)
     debt_status = db.Column(db.String(75), nullable=False)
+    debt_date = db.Column(db.DateTime, nullable=False)
     #Relationships
     payments = db.relationship('Payment', backref='debts', lazy=True)
 

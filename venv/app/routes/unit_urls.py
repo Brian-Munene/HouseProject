@@ -24,11 +24,11 @@ def insert_unit(public_id):
 			return jsonify({'message': 'You must be a manager to register a unit'}), 400
 		request_json = request.get_json()
 		block_id = request_json.get('block_id')
-		status_occupied = Status.query.filter_by(status_code=5).first()
+		unit_number = request_json.get('unit_number')
+		status_occupied = Status.query.filter_by(status_code=6).first()
 		unit_status = status_occupied.status_meaning
 		unit_public_id = str(uuid.uuid4())
-
-		unit = Unit(block_id, unit_status, unit_public_id)
+		unit = Unit(block_id, unit_number, unit_status, unit_public_id)
 		db.session.add(unit)
 		db.session.commit()
 		response_object = {
@@ -62,13 +62,13 @@ def units():
 @app.route('/VacantUnits/<public_id>')
 def vacant_unit(public_id):
 	block = Block.query.fliter_by(public_id=public_id).first()
-	status_empty = Status.query.filter_by(status_code=6).first()
-	units = Unit.query.filter_by(block_id=block.block_id, unit_status=status_empty).all()
+	status = Status.query.filter_by(status_code=6).first()
+	units = Unit.query.filter_by(block_id=block.block_id, unit_status=status.status_meaning).all()
 	units_list = []
 	for unit in units:
 		unit_dict = {
 			'public_id': unit.public_id,
-			'unit_status': status_empty.status_meaning,
+			'unit_status': status.status_meaning,
 			'block_id': unit.block_id
 		}
 		units_list.append(unit_dict)
@@ -83,12 +83,13 @@ def unit(public_id):
 		return jsonify({'message': 'No such unit.'}), 400
 	unit_dict = {
 		'block_id': unit.block_id,
-		'unit_status': unit.unit_status
+		'unit_status': unit.unit_status,
+		'public_id': unit.public_id
 	}
 	return jsonify({'data': unit_dict})
 
 
-#View a user Unit
+#View a user Unit using user's public_id
 @app.route('/TenantUnit/<public_id>/')
 def tenant_unit(public_id):
 	user = User.query.get(public_id)
@@ -97,18 +98,19 @@ def tenant_unit(public_id):
 	unit = Unit.query.get(rental.unit_id)
 	unit_dict = {
 		'unit_id': unit.unit_id,
-		'block_id': unit.block_id
+		'block_id': unit.block_id,
+		'public_id': unit.public_id
 	}
 	return jsonify(unit_dict), 200
 
 
-#Update  Unit details
-@app.route('/UpdateUnit/<id>/', methods=['POST', 'GET'])
-def update_unit(id):
+#Update  Unit details using unit public_id
+@app.route('/UpdateUnit/<public_id>/', methods=['POST', 'GET'])
+def update_unit(public_id):
 	if request.method == 'POST':
 		request_json = request.get_json()
 		new_status = request_json.get('unit_status')
-		unit = Unit.query.get(id)
+		unit = Unit.query.filter_by(public_id=public_id).first()
 		unit.unit_status = new_status
 		db.session.commit()
 		response_object = {
@@ -120,9 +122,9 @@ def update_unit(id):
 
 
 	#Delete a Unit
-@app.route('/DeleteUnit/<id>/', methods=['DELETE'])
-def delete_unit(id):
-		unit = Unit.query.get(id)
+@app.route('/DeleteUnit/<public_id>/', methods=['DELETE'])
+def delete_unit(public_id):
+		unit = Unit.query.filter_by(public_id).first()
 		db.session.delete(unit)
 		db.session.commit()
 		return jsonify({'message': 'The Unit has been deleted!'}), 200
