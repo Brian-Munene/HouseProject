@@ -18,6 +18,8 @@ from database.unit import Unit
 from database.block import Status
 from database.block import Property
 from database.block import Debt
+from database.block import Statement
+from database.block import PaymentType
 
 auth = HTTPBasicAuth()
 
@@ -41,6 +43,8 @@ def register():
         if User.query.filter_by(email=email).first() is not None:
             return jsonify({'message': 'User exists'}), 400   # existing user
         if category == 'tenant':
+            if Tenant.query.filter_by(phone=phone).first():
+                return jsonify({'message': 'Phone number exists.'}), 400
             unit_id = request_json.get('unit_id')
             lease_begin_date = request_json.get('lease_begin_date')
             lease_end_date = request_json.get('lease_end_date')
@@ -53,26 +57,36 @@ def register():
             payment_interval = request_json.get('payment_interval')
             if not Unit.query.filter_by(unit_id=unit_id, unit_status='Empty').first():
                 return jsonify({'message': 'Unit unavailable'})
-            lease = Lease(lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes, lease_status,
-                          payment_interval, lease_public_id)
-            db.session.add(lease)
-            db.session.flush()
-            total_lease_amounnt = lease.lease_amount + lease.service_charges
             user = User(email, category, account_status, user_public_id)
             user.hash_password(password)
             db.session.add(user)
-            db.session.commit()
-
-            debt = Debt(total_lease_amounnt, paid_amount, debt_status, debt_public_id)
-            db.session.add(debt)
-            db.session.commit()
+            db.session.flush()
             tenant_public_id = str(uuid.uuid4())
             tenant = Tenant(first_name, last_name, email, phone, tenant_public_id)
             db.session.add(tenant)
             db.session.commit()
-            rental_public_id = str(uuid.uuid4())
-            rental = Rental(tenant.tenant_id, unit_id, lease.lease_id, rental_public_id)
-            db.session.add(rental)
+            lease = Lease(tenant.tenant_id, unit_id, lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes,
+                          lease_status,
+                          payment_interval, lease_public_id)
+            db.session.add(lease)
+            db.session.flush()
+            total_lease_amount = lease.lease_amount + lease.service_charges
+            paid_amount = 0
+            status = Status.query.filter_by(status_code=10).first()
+            debt_status = status.status_meaning
+            debt_public_id = str(uuid.uuid4())
+            debt_date = lease_begin_date
+            debt = Debt(total_lease_amount, paid_amount, debt_status, debt_date, debt_public_id)
+            db.session.add(debt)
+            db.session.commit()
+            tenant_name = tenant.first_name + ' ' + tenant.last_name
+            payment_amount = 0
+            net_amount = total_lease_amount
+            statement_public_id = str(uuid.uuid4())
+            type = PaymentType.query.filter_by(type_code='Ty008').first()
+            payment_type = type.type_meaning
+            statement = Statement(tenant_name, payment_type, payment_amount, net_amount, statement_public_id)
+            db.session.add(statement)
             db.session.commit()
             unit = Unit.query.get(unit_id)
             status = Status.query.filter_by(status_code=5).first()
@@ -80,12 +94,12 @@ def register():
             db.session.commit()
             response_object = {'message': "Your Tenant account has been created.",
                                'email': user.email,
-                               'public_id': user.public_id,
+                               'user_public_id': user.public_id,
                                'account_status': account_status,
                                'lease_begin_date': lease.lease_begin_date,
                                'lease_end_date': lease.lease_end_date,
                                'lease_amount': lease.lease_amount,
-                               'unit_id': rental.unit_id,
+                               'unit_number': unit.unit_number,
                                'lease_status': account_status,
                                'unit_status': unit.unit_status,
                                'service_charges': lease.service_charges,
@@ -94,6 +108,8 @@ def register():
                             }
             return jsonify(response_object), 201
         elif category == 'landlord':
+            if Landlord.query.filter_by(phone=phone).first():
+                return jsonify({'message': 'Phone number exists.'}), 400
             landlord_public_id = str(uuid.uuid4())
             landlord = Landlord(first_name, last_name, email, phone, landlord_public_id)
             db.session.add(landlord)
@@ -110,6 +126,8 @@ def register():
                                }
             return jsonify(response_object), 201
         elif category == 'caretaker':
+            if Caretaker.query.filter_by(phone=phone).first():
+                return jsonify({'message': 'Phone number exists.'}), 400
             property_public_id = request_json.get('property_public_id')
             property = Property.query.filter_by(public_id=property_public_id).first()
             caretaker_public_id = str(uuid.uuid4())
@@ -126,6 +144,8 @@ def register():
                                'public_id': user.public_id}
             return jsonify(response_object), 201
         elif category == 'property manager':
+            if PropertyManager.query.filter_by(phone=phone).first():
+                return jsonify({'message': 'Phone number exists.'}), 400
             manager_public_id = str(uuid.uuid4())
             manager = PropertyManager(first_name, last_name, email, phone, manager_public_id)
             db.session.add(manager)
@@ -273,7 +293,7 @@ def login():
 #View all users
 @app.route('/users')
 def users():
-    status_active = Status.query.filter_by(status_code=3).first
+    status_active = Status.query.filter_by(status_code=3).first()
     users = User.query.filter_by(account_status=status_active.status_meaning).all()
     usersList = []
     for user in users:

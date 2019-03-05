@@ -1,11 +1,14 @@
 from flask import Flask, session, logging, request, json, jsonify
 import uuid
+import arrow
 #file imports
 from routes import app
 from routes import db
 from database.unit import Unit
 from database.block import Block
 from database.block import Property
+from database.block import Tenant
+from database.block import Lease
 
 
 #Create a block using property's public_id
@@ -44,7 +47,7 @@ def view_blocks():
             blocks_dict = {
                 'property_id': block.property_id,
                 'block_name': block.block_name,
-                'public_id':block.public_id
+                'public_id': block.public_id
             }
             blocksList.append(blocks_dict)
         return jsonify({'data': blocksList})
@@ -108,3 +111,35 @@ def property_blocks(public_id):
         }
         blocks_list.append(block_dict)
     return jsonify(blocks_list), 200
+
+
+#View Block units using block's public_id
+@app.route('/BlockUnits/<public_id>')
+def block_unit(public_id):
+    block = Block.query.filter_by(public_id=public_id).first()
+    property = Property.query.get(block.property_id)
+    units = Unit.query.filter_by(block_id=block.block_id).all()
+    units_list = []
+    block_dict = {
+        'block_name': block.block_name,
+        'property_name': property.property_name,
+        'unit_list': units_list
+    }
+    for unit in units:
+        tenant_name = []
+        unit_dict = {
+            'unit_id': unit.unit_id,
+            'unit_public_id': unit.public_id,
+            'unit_status': unit.unit_status,
+            'tenant_name': tenant_name,
+            'unit_number': unit.unit_number
+        }
+        units_list.append(unit_dict)
+        if unit.unit_status == 'Occupied':
+            lease = Lease.query.filter_by(lease_status='Active', unit_id=unit.unit_id).first()
+            tenant = Tenant.query.filter_by(tenant_id=lease.tenant_id).first()
+            name = tenant.first_name + ' ' + tenant.last_name
+            tenant_name.append(name)
+    return jsonify({'data': block_dict}), 200
+
+

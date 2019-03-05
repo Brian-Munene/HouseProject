@@ -6,8 +6,8 @@ class Status(db.Model):
 
     status_id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(70), nullable=False, unique=True)
-    status_code = db.Column(db.Integer, nullable=False)
-    status_meaning = db.Column(db.String(75), nullable=False)
+    status_code = db.Column(db.Integer, nullable=False, unique=True)
+    status_meaning = db.Column(db.String(75), nullable=False, unique=True)
 
     def __init__(self, status_code, status_meaning, public_id):
         self.public_id = public_id

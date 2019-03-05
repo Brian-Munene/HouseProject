@@ -14,8 +14,9 @@ class Unit(db.Model):
     unit_status = db.Column(db.String(75), nullable=False)
 
     # Relationships
-    rentals = db.relationship('Rental', backref='units', lazy=True)
+    # rentals = db.relationship('Rental', backref='units', lazy=True)
     complaints = db.relationship('Complaint', backref='units', lazy=True)
+    leases = db.relationship('Lease', backref='units', lazy=True)
 
     def __init__(self, block_id, unit_number, unit_status, public_id):
         self.public_id = public_id

@@ -83,9 +83,10 @@ def view_single_complaint(public_id):
     service_list = []
     total_cost = 0
     for service in services:
+        provider = ServiceProviders.query.filter_by(provider_id=service.provider_id).first()
         service_dict = {
             'service_id': service.service_id,
-            'provider_id': service.provider_id,
+            'provider_name': provider.provider_name,
             'cost': service.cost
         }
         service_list.append(service_dict)
@@ -98,6 +99,7 @@ def view_single_complaint(public_id):
             'due_date': complaint.due_date,
             'fixed_date': complaint.fixed_date,
             'unit_id': complaint.unit_id,
+            'service_list': service_list,
             'total_service_cost': service_total_cost
         }
     return jsonify({'data': complaint_dict})
@@ -234,10 +236,6 @@ def property_manager_complaints(public_id):
         for block in blocks:
             units = Unit.query.filter_by(block_id=block.block_id).all()
             for unit in units:
-                if unit.unit_status == 6:
-                    status = 'Vacant'
-                else:
-                    status = 'Occupied'
                 complaints = Complaint.query.filter_by(unit_id=unit.unit_id).all()
                 # complaints_list = []
                 for complaint in complaints:
@@ -247,7 +245,7 @@ def property_manager_complaints(public_id):
                         'property_id': property.property_id,
                         'block_id': block.block_id,
                         'unit_id': unit.unit_id,
-                        'unit_status': status,
+                        'unit_status': unit.unit_status,
                         'date_posted': complaint.date_posted,
                         'message': complaint.message,
                         'due_date': complaint.due_date,
@@ -273,10 +271,6 @@ def caretaker_complaints(public_id):
     for block in blocks:
         units = Unit.query.filter_by(block_id=block.block_id).all()
         for unit in units:
-            if unit.unit_status == 6:
-                status = 'Vacant'
-            else:
-                status = 'Occupied'
             complaints = Complaint.query.filter_by(unit_id=unit.unit_id).all()
             complaints_list = []
             for complaint in complaints:
@@ -286,7 +280,7 @@ def caretaker_complaints(public_id):
                     'property_id': caretaker_property.property_id,
                     'block_id': block.block_id,
                     'unit_id': unit.unit_id,
-                    'unit_status': status,
+                    'unit_status': unit.unit_status,
                     'date_posted': complaint.date_posted,
                     'message': complaint.message,
                     'due_date': complaint.due_date,
@@ -310,11 +304,6 @@ def landlord_complaints(public_id):
     for property in properties:
         blocks = Block.query.filter_by(property_id=property.property_id).all()
         block_list = []
-        property_dict = {
-            'property_name': property.property_name,
-            # 'block_list': block_list
-        }
-        property_list.append(property_dict)
         for block in blocks:
             units = Unit.query.filter_by(block_id=block.block_id).all()
             unit_list = []
@@ -324,10 +313,6 @@ def landlord_complaints(public_id):
             }
             block_list.append(block_dict)
             for unit in units:
-                if unit.unit_status == 6:
-                    status = 'Vacant'
-                elif unit.unit_status == 5:
-                    status = 'Occupied'
                 complaints = Complaint.query.filter_by(unit_id=unit.unit_id).all()
                 complaints_list = []
                 unit_dict = {
@@ -349,6 +334,7 @@ def landlord_complaints(public_id):
                     service_total_cost = total_cost
                     complaint_dict = {
                         'complaint_id': complaint.complaint_id,
+                        'complaint_public_id': complaint.public_id,
                         'property_name': property.property_name,
                         'block_id': block.block_id,
                         'unit_id': unit.unit_id,

@@ -7,11 +7,11 @@ from routes import db
 from database.unit import Unit
 from database.user import User
 #from database.block import Tenant
-from database.rental import Rental
 from database.block import PropertyManager
 from database.block import Status
 from database.block import Block
 from database.block import Tenant
+from database.block import Lease
 
 
 # Register Unit using user public_id
@@ -94,8 +94,8 @@ def unit(public_id):
 def tenant_unit(public_id):
 	user = User.query.get(public_id)
 	tenant = Tenant.query.filter_by(email=user.email).first()
-	rental = Rental.query.filter_by(tenant_id=tenant.tenant_id).first()
-	unit = Unit.query.get(rental.unit_id)
+	lease = Lease.query.filter_by(tenant_id=tenant.tenant_id).first()
+	unit = Unit.query.get(lease.unit_id)
 	unit_dict = {
 		'unit_id': unit.unit_id,
 		'block_id': unit.block_id,

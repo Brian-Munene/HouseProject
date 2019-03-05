@@ -23,4 +23,4 @@ app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 
 #Import routes
 from routes import base_urls, unit_urls, rental_urls, user_urls, block_urls, complaint_urls, image_urls, property_urls, \
-	notification_urls,service_provider_urls, payment_urls, landlord_urls, status_urls, caretaker_urls
+	notification_urls,service_provider_urls, payment_urls, landlord_urls, status_urls, caretaker_urls, payment_type_urls

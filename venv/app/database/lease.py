@@ -16,11 +16,15 @@ class Lease(db.Model):
     notes = db.Column(db.Text(255), nullable=True)
     lease_status = db.Column(db.String(75), nullable=False)
     payment_interval = db.Column(db.Integer, nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.tenant_id'), nullable=False)
+    unit_id = db.Column(db.Integer, db.ForeignKey('units.unit_id'), nullable=False)
 
     # Relationships
     rentals = db.relationship('Rental', backref='leases', lazy=True)
 
-    def __init__(self, lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes, lease_status, paymnet_interval, public_id):
+    def __init__(self, tenant_id, unit_id, lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes, lease_status, paymnet_interval, public_id):
+        self.tenant_id = tenant_id
+        self.unit_id = unit_id
         self.public_id = public_id
         self.lease_begin_date = lease_begin_date
         self.lease_end_date = lease_end_date

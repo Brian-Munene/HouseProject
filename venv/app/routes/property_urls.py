@@ -8,7 +8,6 @@ from database.block import Property
 from database.block import PropertyManager
 from database.block import Landlord
 from database.block import Block
-from database.rental import Rental
 from database.block import Tenant
 from database.block import Lease
 from database.block import Payment
@@ -95,7 +94,8 @@ def view_property(public_id):
     for block in blocks:
         block_dict = {
             'block_units': block.number_of_units,
-            'block_name': block.block_name
+            'block_name': block.block_name,
+            'block_public_id': block.public_id,
         }
         blocks_list.append(block_dict)
     for caretaker in caretakers:
@@ -129,7 +129,7 @@ def manager_property(public_id):
 
 
 #Landlord Property using property's public_id
-@app.route('/LandlordProperty/<public_id>/')
+@app.route('/LandlordProperty/<public_id>')
 def landlord_property(public_id):
     property = Property.query.filter_by(public_id=public_id).first()
     if not property:
@@ -152,7 +152,7 @@ def landlord_property(public_id):
 
 
 #Landlord Properties using user's public_id
-@app.route('/LandlordProperties/<public_id>/')
+@app.route('/LandlordProperties/<public_id>')
 def landlord_properties(public_id):
     user = User.query.filter_by(public_id=public_id).first()
     if not user:
@@ -194,7 +194,6 @@ def landlord_properties(public_id):
             block_list.append(block_dict)
             for unit in units:
                 tenant_list = []
-                rental = Rental.query.fiter_by(unit_id=unit.unit_id)
                 if unit.unit_status == 6:
                     status = 'Empty'
                 elif unit.unit_status == 5:
@@ -211,7 +210,7 @@ def landlord_properties(public_id):
 
 
 # Update Property Details
-@app.route('/UpdateProperty/<public_id>/', methods=['GET', 'POST'])
+@app.route('/UpdateProperty/<public_id>', methods=['GET', 'POST'])
 def update_property(public_id):
     if request.method == 'POST':
         property = Property.query.filter_by(public_id=public_id).first()
@@ -311,7 +310,7 @@ def update_property(public_id):
 
 
 # Delete a Property using the property's public_id
-@app.route('/DeleteProperty/<public_id>/', methods=['DELETE'])
+@app.route('/DeleteProperty/<public_id>', methods=['DELETE'])
 def delete_property(public_id):
     property = Property.query.filter_by(public_id=public_id).first()
     db.session.delete(property)

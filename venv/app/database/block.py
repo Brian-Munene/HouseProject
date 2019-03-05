@@ -123,7 +123,7 @@ class Tenant(db.Model):
     phone = db.Column(db.String(15), nullable=False, unique=True)
 
     #Relationships
-    rentals = db.relationship('Rental', backref='tenants', lazy=True)
+    leases = db.relationship('Lease', backref='tenants', lazy=True)
 
     def __init__(self, first_name, last_name, email, phone, public_id):
         self.public_id = public_id
@@ -165,14 +165,16 @@ class Debt(db.Model):
     paid_amount = db.Column(db.Float, nullable=False, default=0)
     debt_status = db.Column(db.String(75), nullable=False)
     debt_date = db.Column(db.DateTime, nullable=False)
+    lease_id = db.Column(db.Integer, db.ForeignKey('leases.lease_id'), nullable=False)
     #Relationships
     payments = db.relationship('Payment', backref='debts', lazy=True)
 
-    def __init__(self, bill_amount, paid_amount, debt_status, public_id):
+    def __init__(self, bill_amount, paid_amount, debt_status, debt_date, public_id):
         self.public_id = public_id
         self.bill_amount = bill_amount
         self.paid_amount = paid_amount
         self.debt_status = debt_status
+        self.debt_date = debt_date
 
 
 # Lease Model
@@ -190,11 +192,15 @@ class Lease(db.Model):
     notes = db.Column(db.Text(255), nullable=True)
     lease_status = db.Column(db.String(75), nullable=False)
     payment_interval = db.Column(db.Integer, nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.tenant_id'), nullable=False)
+    unit_id = db.Column(db.Integer, db.ForeignKey('units.unit_id'), nullable=False)
 
     # Relationships
-    rentals = db.relationship('Rental', backref='leases', lazy=True)
+    debts = db.relationship('Debt', backref='leases', lazy=True)
 
-    def __init__(self, lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes, lease_status, payment_interval, public_id):
+    def __init__(self, tenant_id, unit_id, lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes, lease_status, paymnet_interval, public_id):
+        self.tenant_id = tenant_id
+        self.unit_id = unit_id
         self.public_id = public_id
         self.lease_begin_date = lease_begin_date
         self.lease_end_date = lease_end_date
@@ -203,8 +209,7 @@ class Lease(db.Model):
         self.service_charges = service_charges
         self.notes = notes
         self.lease_status = lease_status
-        self.payment_interval = payment_interval
-
+        self.payment_interval = paymnet_interval
 
 # Status Model
 class Status(db.Model):
@@ -214,7 +219,7 @@ class Status(db.Model):
     status_id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(70), nullable=False, unique=True)
     status_code = db.Column(db.Integer, nullable=False, unique=True)
-    status_meaning = db.Column(db.String(75), nullable=False)
+    status_meaning = db.Column(db.String(75), nullable=False, unique=True)
 
     def __init__(self, status_code, status_meaning, public_id):
         self.public_id = public_id
@@ -229,17 +234,17 @@ class Statement(db.Model):
 
     statement_id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(70), nullable=False, unique=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.tenant_id'), nullable=False)
-    payment_id = db.Column(db.Integer, db.ForeignKey('payments.payment_id'), nullable=False)
-    lease_id = db.Column(db.Integer, db.ForeignKey('leases.lease_id'), nullable=False)
-    balance = db.Column(db.Float, nullable=False)
+    tenant_name = db.Column(db.String(75), nullable=False)
+    payment_type = db.Column(db.String(75), nullable=False)
+    payment_amount = db.Column(db.Float, nullable=False)
+    net_amount = db.Column(db.Float, nullable=False)
 
-    def __init__(self, tenant_id, payment_id, lease_id, balance, public_id):
+    def __init__(self, tenant_name, payment_type, payment_amount, net_amount, public_id):
         self.public_id = public_id
-        self.tenant_id = tenant_id
-        self.payment_id = payment_id
-        self.lease_id = lease_id
-        self.balance = balance
+        self.tenant_name = tenant_name
+        self.payment_type = payment_type
+        self.payment_amount = payment_amount
+        self.net_amount = net_amount
 
 
 # Service Providers model
@@ -297,3 +302,18 @@ class Notification(db.Model):
         self.notification_message = notification_message
         self.notification_recipient_id = notification_recipient_id
         self.notification_type = notification_type
+
+
+class PaymentType(db.Model):
+    __tablename__ = 'payment_types'
+
+    type_id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.String(70), nullable=False, unique=True)
+    type_code = db.Column(db.String(12), nullable=False, unique=True)
+    type_meaning = db.Column(db.String(75), nullable=False, unique=True)
+
+    def __init__(self, public_id, type_code, type_meaning):
+        self.public_id = public_id
+        self.type_code = type_code
+        self.type_meaning = type_meaning
+

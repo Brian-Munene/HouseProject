@@ -13,10 +13,11 @@ class Tenant(db.Model):
     phone = db.Column(db.String(15), nullable=False, unique=True)
 
     #Relationships
-    rentals = db.relationship('Rental', backref='tenants', lazy=True)
+    leases = db.relationship('Lease', backref='tenants', lazy=True)
 
-    def __init__(self, first_name, last_name, email, phone, public_id):
+    def __init__(self, first_name, last_name, email, phone, lease_id, public_id):
         self.public_id = public_id
+        self.lease_id = lease_id
         self.first_name = first_name
         self.last_name = last_name
         self.email = email

@@ -10,15 +10,15 @@ class Rental(db.Model):
     
     rental_id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(70), nullable=False, unique=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.tenant_id'), nullable=False)
-    unit_id = db.Column(db.Integer, db.ForeignKey('units.unit_id'), nullable=False)
-    lease_id = db.Column(db.Integer, db.ForeignKey('leases.lease_id'), nullable=False)
+    tenant_name = db.Column(db.String(75), nullable=False)
+    unit_number = db.Column(db.String(25), nullable=False)
+    lease_end_date = db.Column(db.Date, nullable=False)
     
-    def __init__(self, tenant_id, unit_id, lease_id, public_id):
+    def __init__(self, tenant_name, unit_number, lease_end_date, public_id):
         self.public_id = public_id
-        self.tenant_id = tenant_id
-        self.unit_id = unit_id
-        self.lease_id = lease_id
+        self.tenant_name = tenant_name
+        self.unit_number = unit_number
+        self.lease_end_date = lease_end_date
 
 '''
 #Complaint Model

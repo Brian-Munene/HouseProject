@@ -8,7 +8,8 @@ from database.complaint import Complaint
 from database.images import Image
 from database.block import Payment
 from database.unit import Unit
-from database.rental import Rental
+from database.block import Lease
+from database.block import Debt
 
 
 #Insert payment
@@ -27,9 +28,7 @@ def insert_payment():
     payment = Payment(unit_id, amount_paid, date_paid)
     db.session.add(payment)
     db.session.commit()
-    rental = Rental.query.filter_by(unit_id=unit_id).first()
-    tenant_id = rental.tenant_id
-    lease_id = rental.lease_id
+    # debt = Debt.query.filter_by(debt_id=payment.debt_id)
 
     response_object = {
         'unit_id': payment.unit_id,
