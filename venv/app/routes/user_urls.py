@@ -64,7 +64,7 @@ def register():
             tenant_public_id = str(uuid.uuid4())
             tenant = Tenant(first_name, last_name, email, phone, tenant_public_id)
             db.session.add(tenant)
-            db.session.commit()
+            db.session.flush()
             lease = Lease(tenant.tenant_id, unit_id, lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes,
                           lease_status,
                           payment_interval, lease_public_id)
@@ -76,18 +76,18 @@ def register():
             debt_status = status.status_meaning
             debt_public_id = str(uuid.uuid4())
             debt_date = lease_begin_date
-            debt = Debt(total_lease_amount, paid_amount, debt_status, debt_date, debt_public_id)
+            debt = Debt(total_lease_amount, paid_amount, debt_status, debt_date, lease.lease_id, debt_public_id)
             db.session.add(debt)
-            db.session.commit()
+            db.session.flush()
             tenant_name = tenant.first_name + ' ' + tenant.last_name
             payment_amount = 0
             net_amount = total_lease_amount
             statement_public_id = str(uuid.uuid4())
             type = PaymentType.query.filter_by(type_code='Ty008').first()
             payment_type = type.type_meaning
-            statement = Statement(tenant_name, payment_type, payment_amount, net_amount, statement_public_id)
+            statement = Statement(tenant.tenant_id, unit_id, tenant_name, payment_type, payment_amount, net_amount, statement_public_id)
             db.session.add(statement)
-            db.session.commit()
+            db.session.flush()
             unit = Unit.query.get(unit_id)
             status = Status.query.filter_by(status_code=5).first()
             unit.unit_status = status.status_meaning

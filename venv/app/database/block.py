@@ -146,13 +146,13 @@ class Payment(db.Model):
     debt_id = db.Column(db.Integer, db.ForeignKey('debts.debt_id'), nullable=False)
     date_paid = db.Column(db.Date, nullable=False)
 
-    def __init__(self, unit_id, amount_paid, payment_type, date_paid, public_id):
+    def __init__(self, unit_id, amount_paid, payment_type, debt_id, public_id):
         self.public_id = public_id
+        self.debt_id = debt_id
         self.unit_id = unit_id
         self.amount_paid = amount_paid
         self.payment_type = payment_type
-        self.date_paid = date_paid
-        self.debt_date = datetime.utcnow()
+        self.date_paid = datetime.utcnow()
 
 
 #Debt Model
@@ -169,11 +169,12 @@ class Debt(db.Model):
     #Relationships
     payments = db.relationship('Payment', backref='debts', lazy=True)
 
-    def __init__(self, bill_amount, paid_amount, debt_status, debt_date, public_id):
+    def __init__(self, bill_amount, paid_amount, debt_status, debt_date, lease_id, public_id):
         self.public_id = public_id
         self.bill_amount = bill_amount
         self.paid_amount = paid_amount
         self.debt_status = debt_status
+        self.lease_id = lease_id
         self.debt_date = debt_date
 
 
@@ -235,12 +236,16 @@ class Statement(db.Model):
     statement_id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(70), nullable=False, unique=True)
     tenant_name = db.Column(db.String(75), nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.tenant_id'), nullable=False)
+    unit_id = db.Column(db.Integer, db.ForeignKey('units.unit_id'), nullable=False)
     payment_type = db.Column(db.String(75), nullable=False)
     payment_amount = db.Column(db.Float, nullable=False)
     net_amount = db.Column(db.Float, nullable=False)
 
-    def __init__(self, tenant_name, payment_type, payment_amount, net_amount, public_id):
+    def __init__(self, tenant_id, unit_id, tenant_name, payment_type, payment_amount, net_amount, public_id):
         self.public_id = public_id
+        self.tenant_id = tenant_id
+        self.unit_id = unit_id
         self.tenant_name = tenant_name
         self.payment_type = payment_type
         self.payment_amount = payment_amount
