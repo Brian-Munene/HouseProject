@@ -9,6 +9,8 @@ from database.block import Landlord
 from database.block import PropertyManager
 from database.block import Tenant
 from database.unit import Unit
+from database.block import Lease
+from database.block import Payment
 
 
 @app.route('/ViewTenants')
@@ -40,6 +42,4 @@ def single_tenant(public_id):
         'tenant_id': tenant.tenant_id
     }
     return jsonify({'data': tenant_dict}), 200
-
-
 

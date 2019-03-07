@@ -9,5 +9,5 @@ from routes import app
 auth = HTTPBasicAuth()
 
 if __name__ == "__main__":
-	app.config['SECRET_KEY'] = 'secret123'
+	app.config['SECRET_KEY'] = 'fluidtech2propertymanagement'
 	app.run(debug=True)

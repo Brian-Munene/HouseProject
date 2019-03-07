@@ -57,19 +57,33 @@ def view_complaints():
         return jsonify(response_object), 200
     complaintList = []
     for complaint in complaints:
-
+        services = Services.query.filter_by(complaint_id=complaint.complaint_id).all()
+        service_list = []
+        total_cost = 0
+        for service in services:
+            service_dict = {
+                'service_id': service.service_id,
+                'provider_id': service.provider_id,
+                'cost': service.cost
+            }
+            service_list.append(service_dict)
+            total_cost = total_cost + service.cost
+        service_total_cost = total_cost
         complaint_dict = {
             'date_posted': complaint.date_posted,
             'message': complaint.message,
             'due_date': complaint.due_date,
             'fixed_date': complaint.fixed_date,
             'complaint_id': complaint.complaint_id,
-            'public_id': complaint.public_id
+            'public_id': complaint.public_id,
+            'service_list': service_list,
+            'service_total_cost': service_total_cost
         }
         complaintList.append(complaint_dict)
     return jsonify({'data': complaintList})
 
 
+#View a single complaint using a single complaint's public_id
 @app.route('/ViewSingleComplaint/<public_id>')
 def view_single_complaint(public_id):
     complaint = Complaint.query.filter_by(public_id=public_id).first()
@@ -276,7 +290,7 @@ def caretaker_complaints(public_id):
             for complaint in complaints:
                 complaint_dict = {
                     'complaint_id': complaint.complaint_id,
-                    'public_id': complaint.public_id,
+                    'complaint_public_id': complaint.public_id,
                     'property_id': caretaker_property.property_id,
                     'block_id': block.block_id,
                     'unit_id': unit.unit_id,
@@ -286,8 +300,8 @@ def caretaker_complaints(public_id):
                     'due_date': complaint.due_date,
                     'fixed_date': complaint.fixed_date
                 }
-                complaints_list.append(complaint_dict)
-            property_complaints.append(complaints_list)
+                # complaints_list.append(complaint_dict)
+                property_complaints.append(complaint_dict)
     return jsonify(property_complaints), 200
 
 

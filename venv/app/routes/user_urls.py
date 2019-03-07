@@ -13,7 +13,6 @@ from database.block import Caretaker
 from database.block import Landlord
 from database.block import PropertyManager
 from database.block import Lease
-from database.rental import Rental
 from database.unit import Unit
 from database.block import Status
 from database.block import Property
@@ -83,9 +82,9 @@ def register():
             payment_amount = 0
             net_amount = total_lease_amount
             statement_public_id = str(uuid.uuid4())
-            type = PaymentType.query.filter_by(type_code='Ty008').first()
-            payment_type = type.type_meaning
-            statement = Statement(tenant.tenant_id, unit_id, tenant_name, payment_type, payment_amount, net_amount, statement_public_id)
+            transaction_type = PaymentType.query.filter_by(type_code='Ty008').first()
+            invoice = transaction_type.type_meaning
+            statement = Statement(tenant.tenant_id, unit_id, tenant_name, invoice, payment_amount, net_amount, debt_date, statement_public_id)
             db.session.add(statement)
             db.session.flush()
             unit = Unit.query.get(unit_id)
@@ -177,7 +176,7 @@ def login():
         if user and user.verify_password(password):
 	        if user.category == 'tenant':
 		        tenant = Tenant.query.filter_by(email=email).first()
-		        rental = Rental.query.filter_by(tenant_id=tenant.tenant_id).first()
+		        lease = Lease.query.filter_by(tenant_id=tenant.tenant_id).first()
 		        app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
 		        response_object = {
 			        'message': 'Successfully Logged in.',
@@ -187,8 +186,8 @@ def login():
 			        'firstname': tenant.first_name,
 			        'lastname': tenant.last_name,
 			        'email': user.email,
-			        'unit_id': rental.unit_id,
-			        'tenant_id': rental.tenant_id
+			        'unit_id': lease.unit_id,
+			        'tenant_id': lease.tenant_id
 		        }
 		        return jsonify(response_object), 200
 	        elif user.category == 'landlord':
@@ -422,10 +421,10 @@ def logout(self):
         resp = User.decode_auth_token(auth_token)
         if not isinstance(resp, str):
             #mark the token as blacklisted
-            blacklist_token = Token(token=0) #blacklisted token
+            # blacklist_token = Token(token=0) #blacklisted token
             try:
                 #insert the token
-                db.session.add(blacklist_token)
+                # db.session.add(blacklist_token)
                 db.session.commit()
                 response_object = {
                     'status': 'success',

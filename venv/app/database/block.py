@@ -238,17 +238,19 @@ class Statement(db.Model):
     tenant_name = db.Column(db.String(75), nullable=False)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.tenant_id'), nullable=False)
     unit_id = db.Column(db.Integer, db.ForeignKey('units.unit_id'), nullable=False)
-    payment_type = db.Column(db.String(75), nullable=False)
-    payment_amount = db.Column(db.Float, nullable=False)
+    transaction_type = db.Column(db.String(75), nullable=False)
+    transaction_amount = db.Column(db.Float, nullable=False)
+    transaction_date = db.Column(db.Date, nullable=False)
     net_amount = db.Column(db.Float, nullable=False)
 
-    def __init__(self, tenant_id, unit_id, tenant_name, payment_type, payment_amount, net_amount, public_id):
+    def __init__(self, tenant_id, unit_id, tenant_name, transaction_type, transaction_amount, net_amount, transaction_date, public_id):
         self.public_id = public_id
         self.tenant_id = tenant_id
         self.unit_id = unit_id
         self.tenant_name = tenant_name
-        self.payment_type = payment_type
-        self.payment_amount = payment_amount
+        self.transaction_type = transaction_type
+        self.transaction_amount = transaction_amount
+        self.transaction_date = transaction_date
         self.net_amount = net_amount
 
 

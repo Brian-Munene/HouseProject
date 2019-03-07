@@ -1,0 +1,35 @@
+version: "3"
+services:
+  HouseProject:
+    build:
+      context: .
+      dockerfile: development.Dockerfile
+    container_name: HouseProject
+    restart: on-failure
+    environment:
+      SQLALCHEMY_DATABASE_URI: mysql://property:property@mysql/property
+      UPLOAD_FOLDER: uploads
+      SECRET_KEY: fluidtech2propertymanagement
+      APP_SETTINGS: config.StagingConfig
+      PROD_SERVER: 167.99.85.35
+    ports:
+      - "7001:7001"
+    volumes:
+      - ./:/HouseProject
+    depends_on:
+      - HouseProject_mysql
+  mysql:
+    image: mysql:5.6
+    container_name: HouseProject_mysql
+    environment:
+      MYSQL_ROOT_HOST:  mysql
+      MYSQL_ROOT_PASSWORD: property
+      MYSQL_DATABASE: property
+      MYSQL_USER: property
+      MYSQL_PASSWORD: property
+    ports:
+      - "7309:3306"
+    volumes:
+      - "/var/www/mysql/property:/var/lib/mysql"
+      - "/var/www/mysqld.conf.d:/etc/mysql/mysql.conf.d"
+
