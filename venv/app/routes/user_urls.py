@@ -79,12 +79,12 @@ def register():
             db.session.add(debt)
             db.session.flush()
             tenant_name = tenant.first_name + ' ' + tenant.last_name
-            payment_amount = 0
+            transaction_amount = total_lease_amount
             net_amount = total_lease_amount
             statement_public_id = str(uuid.uuid4())
             transaction_type = PaymentType.query.filter_by(type_code='Ty008').first()
             invoice = transaction_type.type_meaning
-            statement = Statement(tenant.tenant_id, unit_id, tenant_name, invoice, payment_amount, net_amount, debt_date, statement_public_id)
+            statement = Statement(tenant.tenant_id, unit_id, tenant_name, invoice, transaction_amount, net_amount, debt_date, statement_public_id)
             db.session.add(statement)
             db.session.flush()
             unit = Unit.query.get(unit_id)

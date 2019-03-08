@@ -162,7 +162,7 @@ def landlord_properties(public_id):
         return jsonify({'message': 'Only landlords can view this information'}), 422
     properties = Property.query.filter_by(landlord_id=landlord.landlord_id).all()
     if not properties:
-        return jsonify({'Error': 'Landlord does not exist.'}), 200
+        return jsonify({'Error': 'Property does not exist.'}), 200
     properties_list = []
     for property in properties:
         block_list = []
@@ -194,15 +194,10 @@ def landlord_properties(public_id):
             block_list.append(block_dict)
             for unit in units:
                 tenant_list = []
-                if unit.unit_status == 6:
-                    status = 'Empty'
-                elif unit.unit_status == 5:
-                    status = 'Occupied'
-                else:
-                    status = 'Undefined'
+
                 unit_dict = {
                     'unit_public_id': unit.public_id,
-                    'unit_status': status
+                    'unit_status': unit.unit_status
                 }
 
                 unit_list.append(unit_dict)
