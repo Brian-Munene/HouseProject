@@ -24,6 +24,8 @@ def rent_due(public_id):
     if not tenant:
         return jsonify({'message': 'Only tenant get notifications'}), 400
     lease = Lease.query.filter_by(tenant_id=tenant.tenant_id, lease_status='Active').first()
+    if not lease:
+        return jsonify({'message': 'Lease is expired'}), 400
     current_date = arrow.utcnow().date()
     if lease:
         notification = Notification.query.filter_by(recipient_id=tenant.tenant_id).first()
@@ -32,10 +34,9 @@ def rent_due(public_id):
             recipient_id = tenant.tenant_id
             notification_date = lease.lease_begin_date
             notification_type = 'Due Payment'
-            public_id = str(uuid.uuid4())
-            notification = Notification(notification_message, recipient_id, notification_date, notification_type,
-                                        public_id)
-            db.session.add(notification)
+            notification_public_id = str(uuid.uuid4())
+            new_notification = Notification(notification_message, recipient_id, notification_date, notification_type, notification_public_id)
+            db.session.add(new_notification)
             db.session.commit()
             response_object = {
                 'notification_message': notification.notification_message,

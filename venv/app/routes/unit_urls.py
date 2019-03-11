@@ -90,10 +90,12 @@ def unit(public_id):
 
 
 #View a user Unit using user's public_id
-@app.route('/TenantUnit/<public_id>/')
+@app.route('/TenantUnit/<public_id>')
 def tenant_unit(public_id):
-	user = User.query.get(public_id)
+	user = User.query.filter_by(public_id=public_id).first()
 	tenant = Tenant.query.filter_by(email=user.email).first()
+	if not tenant:
+		return jsonify({'message': 'Only tenant can access this route'}), 400
 	lease = Lease.query.filter_by(tenant_id=tenant.tenant_id).first()
 	unit = Unit.query.get(lease.unit_id)
 	unit_dict = {
@@ -124,7 +126,7 @@ def update_unit(public_id):
 	#Delete a Unit
 @app.route('/DeleteUnit/<public_id>/', methods=['DELETE'])
 def delete_unit(public_id):
-		unit = Unit.query.filter_by(public_id).first()
+		unit = Unit.query.filter_by(public_id=public_id).first()
 		db.session.delete(unit)
 		db.session.commit()
 		return jsonify({'message': 'The Unit has been deleted!'}), 200

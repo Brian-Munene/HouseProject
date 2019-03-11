@@ -27,6 +27,8 @@ def tenant_statement(public_id):
     if not user:
         return jsonify({'message': 'You should be a user to access this route'}), 400
     tenant = Tenant.query.filter_by(email=user.email).first()
+    if not tenant:
+        return jsonify({'message': 'Only tenant can view these statements'}), 400
     tenant_name = tenant.first_name + ' ' + tenant.last_name
     response_object['tenant_name'] = tenant_name
     if not tenant:

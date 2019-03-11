@@ -2,6 +2,7 @@ from flask import Flask, session, logging, send_from_directory, send_file, reque
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 import arrow
+import uuid
 import os
 #file imports
 from routes import app
@@ -35,7 +36,8 @@ def upload_file(public_id):
                         image.save(saved_path)
                         path = app.config['UPLOAD_FOLDER'] + image_name
                         complaint = Complaint.query.filter_by(public_id=public_id).first()
-                        image_details = Image(path, complaint.complaint_id)
+                        image_public_id = str(uuid.uuid4())
+                        image_details = Image(path, complaint.complaint_id, image_public_id)
                         db.session.add(image_details)
                         db.session.commit()
                         response_object = {
