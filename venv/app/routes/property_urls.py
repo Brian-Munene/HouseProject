@@ -177,6 +177,7 @@ def landlord_properties(public_id):
         properties_dict = {
             'property_public_id': property.public_id,
             'Property_name': property.property_name,
+            'Property_id': property.property_id,
             'manager_id': manager_name,
             'landlord_id': landlord_name,
             'block_list': block_list
@@ -194,7 +195,6 @@ def landlord_properties(public_id):
             block_list.append(block_dict)
             for unit in units:
                 tenant_list = []
-
                 unit_dict = {
                     'unit_public_id': unit.public_id,
                     'unit_status': unit.unit_status
