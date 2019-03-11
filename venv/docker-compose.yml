@@ -18,7 +18,7 @@ services:
       - ./:/HouseProject
     depends_on:
       - HouseProject_mysql
-  mysql:
+  HouseProject_mysql:
     image: mysql:5.6
     container_name: HouseProject_mysql
     environment:
