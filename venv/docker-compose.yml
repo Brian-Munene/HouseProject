@@ -1,10 +1,10 @@
 version: "3"
 services:
-  HouseProject:
+  house_project:
     build:
       context: .
       dockerfile: development.Dockerfile
-    container_name: HouseProject
+    container_name: house_project
     restart: on-failure
     environment:
       SQLALCHEMY_DATABASE_URI: mysql://property:property@mysql/property
@@ -15,12 +15,12 @@ services:
     ports:
       - "7001:7001"
     volumes:
-      - ./:/HouseProject
+      - ./:/house_project
     depends_on:
-      - HouseProject_mysql
-  HouseProject_mysql:
+      - house_project_mysql
+  house_project_mysql:
     image: mysql:5.6
-    container_name: HouseProject_mysql
+    container_name: house_project_mysql
     environment:
       MYSQL_ROOT_HOST:  mysql
       MYSQL_ROOT_PASSWORD: property
