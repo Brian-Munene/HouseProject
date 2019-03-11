@@ -5,7 +5,7 @@ RUN mkdir -p/ HouseProject
 WORKDIR /HouseProject
 RUN mkdir -p /config
 
-ADD ./HouseProject/
+ADD . /HouseProject/
 RUN pip install -r requirements.txt --cache-dir /pip-cache
 RUN echo "Africa/Nairobi" > /etc/timezone
 RUN dpkg-reconfigure -f noninteractive tzdata
