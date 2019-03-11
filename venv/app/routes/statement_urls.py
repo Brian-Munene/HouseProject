@@ -38,6 +38,7 @@ def tenant_statement(public_id):
     response_object['block_name'] = block.block_name
     property = Property.query.filter_by(property_id=block.property_id).first()
     response_object['property_name'] = property.property_name
+    response_object['property_id'] = property.property_id
     statements = Statement.query.filter_by(tenant_id=tenant.tenant_id).all()
     if not statements:
         return jsonify({'message': 'No Statements'}), 400
@@ -90,6 +91,7 @@ def landlord_statement(public_id):
         block_list = []
         property_dict = {}
         property_dict['property_name'] = property.property_name
+        property_dict['property_id'] = property.property_id
         property_dict['block_list'] = block_list
         property_list.append(property_dict)
         blocks = Block.query.filter_by(property_id=property.property_id).all()

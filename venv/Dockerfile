@@ -1,7 +1,7 @@
 FROM python:3.5.2-slim
 
 RUN apt-get update && apt-get install -y python3-dev libmysqlclient-dev build-essential libssl-dev libffi-dev libpq-dev gcc
-RUN mkdir -p/ HouseProject
+RUN mkdir -p /HouseProject
 WORKDIR /HouseProject
 RUN mkdir -p /config
 
