@@ -10,4 +10,5 @@ auth = HTTPBasicAuth()
 
 if __name__ == "__main__":
 	app.config['SECRET_KEY'] = 'fluidtech2propertymanagement'
-	app.run(debug=True)
+	app.run(debug=True, port=7001)
+

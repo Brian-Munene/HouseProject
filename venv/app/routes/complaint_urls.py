@@ -29,7 +29,7 @@ def create_complaint():
     complaint_public_id = str(uuid.uuid4())
     if message is None or due_date is None or unit_id is None:
         return jsonify({'message', 'Fields should not be null.'}), 422
-    if not Unit.query.get(unit_id):
+    if not Unit.query.filter_by(unit_id=unit_id):
         return jsonify({'message': 'Unit does not exist.'}), 400
     complaint = Complaint(message, due_date, fixed_date, unit_id, complaint_public_id)
     db.session.add(complaint)

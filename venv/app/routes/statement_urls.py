@@ -81,12 +81,16 @@ def landlord_statement(public_id):
     if not user:
         return jsonify({'message': 'You should be a user to access this route'}), 400
     landlord = Landlord.query.filter_by(email=user.email).first()
+    landlord_name = landlord.first_name + ' ' + landlord.last_name
     if not landlord:
         return jsonify({'message': 'Only landlord can view this statement'}), 400
-    properties = Property.query.filter_by(landlord_id = landlord.landlord_id).all()
+    properties = Property.query.filter_by(landlord_id=landlord.landlord_id).all()
     if not properties:
         return jsonify({'message': 'No properties available'}), 400
+    user_dict = {}
     property_list = []
+    user_dict['landlord_name'] = landlord_name
+    user_dict['properties'] = property_list
     total_debit = 0
     total_credit = 0
     for property in properties:
@@ -134,8 +138,10 @@ def landlord_statement(public_id):
                     block_dict['total_debit'] = total_debit
                     property_dict['total_credit'] = total_credit
                     property_dict['total_debit'] = total_debit
+                    user_dict['total_credit'] = total_credit
+                    user_dict['total_debit'] = total_debit
                     statement_list.append(statement_dict)
-    return jsonify(property_list), 200
+    return jsonify(user_dict), 200
 
 
 #PropertyManager statement using user's public_id
@@ -145,12 +151,16 @@ def property_manager_statement(public_id):
     if not user:
         return jsonify({'message': 'You should be a user to access this route'}), 400
     manager = PropertyManager.query.filter_by(email=user.email).first()
+    manager_name = manager.first_name + ' ' + manager.last_name
     if not manager:
         return jsonify({'message': 'Only landlord can view this statement'}), 400
     properties = Property.query.filter_by(manager_id = manager.manager_id).all()
     if not properties:
         return jsonify({'message': 'No properties available'}), 400
+    user_dict = {}
     property_list = []
+    user_dict['manager_name'] = manager_name
+    user_dict['properties'] = property_list
     total_debit = 0
     total_credit = 0
     for property in properties:
@@ -197,7 +207,9 @@ def property_manager_statement(public_id):
                     block_dict['total_debit'] = total_debit
                     property_dict['total_credit'] = total_credit
                     property_dict['total_debit'] = total_debit
+                    user_dict['total_credit'] = total_credit
+                    user_dict['total_debit'] = total_debit
                     statement_list.append(statement_dict)
-    return jsonify(property_list), 200
+    return jsonify(user_dict), 200
 
 
