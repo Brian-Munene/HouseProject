@@ -15,6 +15,7 @@ from database.user import User
 from database.block import Tenant
 from database.block import Status
 from database.block import Statement
+from database.block import PropertyManager
 
 
 #Insert payment using user's public_id
