@@ -18,4 +18,5 @@ cherrypy.config.update({'server.socket_host': '127.0.0.1',
 if __name__ == "__main__":
 	app.config['SECRET_KEY'] = 'fluidtech2propertymanagement'
 	cherrypy.engine.start()
+	# cherrypy.engine.exit()
 	# app.run(debug=True, port=7001)
