@@ -300,7 +300,7 @@ class Notification(db.Model):
 
     notification_id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(70), nullable=False, unique=True)
-    notification_message = db.Column(db.Text(255), nullable=False)
+    notification_message = db.Column(db.Text, nullable=False)
     recipient_id = db.Column(db.Integer, nullable=False)
     notification_date = db.Column(db.Date, nullable=False)
     notification_type = db.Column(db.String(75), nullable=False)

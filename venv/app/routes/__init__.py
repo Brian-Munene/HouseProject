@@ -11,9 +11,12 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://property_u:property_p@139.162.234.147:7309/property_db"
+# Production database
+# app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://property_u:property_p@139.162.234.147:7309/property_db"
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:motongoria@localhost:3306/plot'
+# Development database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:motongoria@localhost:3306/plot'
+
 app.config['SQLALCHEMY_ECHO'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
