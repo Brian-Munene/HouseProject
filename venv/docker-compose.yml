@@ -7,7 +7,7 @@ services:
     container_name: house_project
     restart: on-failure
     environment:
-      SQLALCHEMY_DATABASE_URI: mysql://property:property@mysql/property
+      SQLALCHEMY_DATABASE_URI: postgresql://property_u:property_p@house_project_postgresql/property_db
       UPLOAD_FOLDER: uploads
       SECRET_KEY: fluidtech2propertymanagement
       APP_SETTINGS: config.StagingConfig
@@ -17,19 +17,17 @@ services:
     volumes:
       - ./:/house_project
     depends_on:
-      - house_project_mysql
-  house_project_mysql:
-    image: mysql:5.6
-    container_name: house_project_mysql
+      - house_project_postgresql
+  house_project_postgresql:
+    image: postgres:alpine
+    container_name: house_project_postgresql
+    restart: always
     environment:
-      MYSQL_ROOT_HOST:  mysql
-      MYSQL_ROOT_PASSWORD: property
-      MYSQL_DATABASE: property
-      MYSQL_USER: property
-      MYSQL_PASSWORD: property
+      POSTGRES_DB: property_db
+      POSTGRES_USER: property_u
+      POSTGRES_PASSWORD: property_p
     ports:
-      - "7309:3306"
+      - "7309:5432"
     volumes:
-      - "/var/www/mysql/property:/var/lib/mysql"
-      - "/var/www/mysqld.conf.d:/etc/mysql/mysql.conf.d"
+      - "/var/www/property_postgres/property:/var/lib/postgresql/data"
 
