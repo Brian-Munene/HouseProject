@@ -18,7 +18,7 @@ from database.block import Statement
 from database.block import PropertyManager
 
 
-#Insert payment using user's public_id
+#Insert payment using tenant's public_id
 @app.route('/InsertPayment/<public_id>', methods=['POST'])
 def insert_payment(public_id):
     request_json = request.get_json()
@@ -28,10 +28,7 @@ def insert_payment(public_id):
     if unit_id is None or payment_type is None or amount_paid is None:
         return jsonify({'message': 'You have null entries'}), 400
     payment_public_id = str(uuid.uuid4())
-    user = User.query.filter_by(public_id=public_id).first()
-    if not user:
-        return jsonify({'message': 'You must be a user to make a payment'}), 400
-    tenant = Tenant.query.filter_by(email=user.email).first()
+    tenant = Tenant.query.filter_by(public_id=public_id).first()
     tenant_lease_verification = Lease.query.filter_by(tenant_id=tenant.tenant_id, unit_id=unit_id).first()
     if not tenant:
         return jsonify({'message': 'Only tenants can make payments.'}), 400

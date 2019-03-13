@@ -13,6 +13,7 @@ from database.block import Lease
 from database.block import Payment
 from database.block import Caretaker
 from database.user import User
+from database.block import Lease
 
 
 # Insert new Property using user's public_id
@@ -108,24 +109,47 @@ def view_property(public_id):
 
 
 #Manager Properties using user's public_id
-@app.route('/ManagerProperties/<public_id>/')
+@app.route('/ManagerProperties/<public_id>')
 def manager_property(public_id):
     user = User.query.filter_by(public_id=public_id).first()
+    if not user:
+        return jsonify({'message': 'Please log in to use view properties'}), 400
     manager = PropertyManager.query.filter_by(email=user.email).first()
+    if not manager:
+        return jsonify({'message': 'Only managers can view properties'}), 400
     properties = Property.query.filter_by(manager_id=manager.manager_id).all()
     if not properties:
-        return jsonify({'Error': 'Manager does not exist.'}), 200
-    propertiesList = []
+        return jsonify({'Error': 'No properties available.'}), 200
+    properties_list = []
     for property in properties:
+        block_list = []
         properties_dict = {
-            'property_id': property.property_id,
+            'property_public_id': property.public_id,
             'Property_name': property.property_name,
-            'manager_id': property.manager_id,
-            'landlord_id': property.landlord_id,
-            'public_id': property.public_id
+            'block_list': block_list
         }
-        propertiesList.append(properties_dict)
-    return jsonify({'data': propertiesList})
+        properties_list.append(properties_dict)
+        blocks = Block.query.filter_by(property_id=property.property_id)
+        for block in blocks:
+            units = Unit.query.filter_by(block_id=block.block_id).all()
+            unit_list = []
+            block_dict = {
+                'block_name': block.block_name,
+                'block_public_id': block.public_id,
+                'unit_list': unit_list
+            }
+            block_list.append(block_dict)
+            for unit in units:
+                lease = Lease.query.filter_by(unit_id=unit.unit_id, lease_status='Active').first()
+                tenant = Tenant.query.filter_by(tenant_id=lease.tenant_id).first()
+                tenant_name = tenant.first_name + ' ' + tenant.last_name
+                unit_dict = {
+                    'unit_id': unit.unit_id,
+                    'tenant_name': tenant_name,
+                    'tenant_public_id': tenant.public_id
+                }
+                unit_list.append(unit_dict)
+    return jsonify(properties_list), 200
 
 
 #Landlord Property using property's public_id
