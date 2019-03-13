@@ -294,6 +294,8 @@ def login():
 def users():
     status_active = Status.query.filter_by(status_code=3).first()
     users = User.query.filter_by(account_status=status_active.status_meaning).all()
+    if not users:
+        return jsonify({'message': 'Users are not available at the moment.'}), 400
     usersList = []
     for user in users:
         users_dict = {
