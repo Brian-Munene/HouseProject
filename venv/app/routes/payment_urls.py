@@ -45,7 +45,7 @@ def insert_payment(public_id):
     payment = Payment(unit_id, amount_paid, payment_type, debt.debt_id, payment_public_id)
     db.session.add(payment)
     db.session.flush()
-    debt.paid_amount = debt.paid_amount + amount_paid
+    debt.paid_amount = debt.paid_amount + payment.amount_paid
     db.session.flush()
     if debt.paid_amount == debt.bill_amount:
         payment_status = Status.query.filter_by(status_code=8).first()

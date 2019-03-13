@@ -11,7 +11,7 @@ class Debt(db.Model):
     bill_amount = db.Column(db.Float, nullable=False)
     paid_amount = db.Column(db.Float, nullable=False, default=0)
     debt_status = db.Column(db.String(75), nullable=False)
-    debt_date = db.Column(db.DateTime, nullable=False)
+    debt_date = db.Column(db.Date, nullable=False)
     #Relationships
     payments = db.relationship('Payment', backref='debts', lazy=True)
 
