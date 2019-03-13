@@ -32,7 +32,7 @@ def payment_types():
     types_list = []
     for type in types:
         type_dict = {
-            'type_code':type.type_code,
+            'type_code': type.type_code,
             'type_meaning': type.type_meaning
         }
         types_list.append(type_dict)
