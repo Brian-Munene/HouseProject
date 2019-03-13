@@ -10,7 +10,7 @@ from routes import app
 auth = HTTPBasicAuth()
 
 cherrypy.tree.graft(app.wsgi_app, '/')
-cherrypy.config.update({'server.socket_host': '127.0.0.1',
+cherrypy.config.update({'server.socket_host': '0.0.0.0',
                            'server.socket_port': 7001,
                            'engine.autoreload.on': False,
                            })
