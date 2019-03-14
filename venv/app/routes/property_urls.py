@@ -130,24 +130,29 @@ def manager_property(public_id):
         }
         properties_list.append(properties_dict)
         blocks = Block.query.filter_by(property_id=property.property_id)
+        if not blocks:
+            properties_dict['block_list'] = 'No Blocks'
         for block in blocks:
+            block_dict = {}
             units = Unit.query.filter_by(block_id=block.block_id).all()
+            if not units:
+                block_dict['block_name'] = 'Empty Unit'
             unit_list = []
-            block_dict = {
-                'block_name': block.block_name,
-                'block_public_id': block.public_id,
-                'unit_list': unit_list
-            }
+            block_dict['block_name'] = block.block_name
+            block_dict['block_public_id'] = block.public_id,
+            block_dict['unit_list'] = unit_list
             block_list.append(block_dict)
             for unit in units:
+                unit_dict = {}
                 lease = Lease.query.filter_by(unit_id=unit.unit_id, lease_status='Active').first()
-                tenant = Tenant.query.filter_by(tenant_id=lease.tenant_id).first()
-                tenant_name = tenant.first_name + ' ' + tenant.last_name
-                unit_dict = {
-                    'unit_id': unit.unit_id,
-                    'tenant_name': tenant_name,
-                    'tenant_public_id': tenant.public_id
-                }
+                if lease:
+                    tenant = Tenant.query.get(lease.tenant_id)
+                    tenant_name = tenant.first_name + ' ' + tenant.last_name
+                    unit_dict['tenant_name'] = tenant_name
+                    unit_dict['tenant_public_id'] = tenant.public_id
+                else:
+                    unit_dict['tenant_name'] = ' Empty Unit'
+                unit_dict['unit_id'] = unit.unit_id
                 unit_list.append(unit_dict)
     return jsonify(properties_list), 200
 
@@ -209,13 +214,14 @@ def landlord_properties(public_id):
         properties_list.append(properties_dict)
         blocks = Block.query.filter_by(property_id=property.property_id)
         for block in blocks:
+            block_dict = {}
             units = Unit.query.filter_by(block_id=block.block_id).all()
+            if not units:
+                block_dict['unit_list'] = 'No Units'
             unit_list = []
-            block_dict = {
-                'block_name': block.block_name,
-                'block_public_id': block.public_id,
-                'unit_list': unit_list
-            }
+            block_dict['unit_list'] = unit_list
+            block_dict['block_public_id'] = block.public_id
+            block_dict['block_name'] = block.block_name
             block_list.append(block_dict)
             for unit in units:
                 tenant_list = []

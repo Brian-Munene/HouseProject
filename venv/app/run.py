@@ -18,9 +18,9 @@ cherrypy.config.update({'server.socket_host': '0.0.0.0',
 if __name__ == "__main__":
     app.config['SECRET_KEY'] = 'fluidtech2propertymanagement'
     try:
-        cherrypy.engine.start()
+       cherrypy.engine.start()
     except KeyboardInterrupt:
-        cherrypy.engine.stop()
+       cherrypy.engine.stop()
 
     #Mount the application
     #cherrypy.tree.graft(app, "/")
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     #server = cherrypy._cpserver.Server()
 
     # Configure the server object
-    #server.socket_host = "127.0.0.1"
+    #server.socket_host = "0.0.0.0"
     #server.socket_port = 7001
     #server.thread_pool = 30
 

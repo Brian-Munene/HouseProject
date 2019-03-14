@@ -16,6 +16,7 @@ from database.block import Tenant
 from database.block import Status
 from database.block import Statement
 from database.block import PropertyManager
+from database.block import Notification
 
 
 #Insert payment using tenant's public_id
@@ -68,6 +69,14 @@ def insert_payment(public_id):
     statement_public_id = str(uuid.uuid4())
     statement = Statement(tenant.tenant_id, unit_id, tenant_name, payment_type, amount_paid, amount_left, transaction_date, statement_public_id)
     db.session.add(statement)
+    db.session.flush()
+    notification_message = 'Payment ' + str(amount_paid) + ' has been received'
+    recipient_id = tenant.tenant_id
+    notification_date = lease.lease_begin_date
+    notification_type = 'Due Payment'
+    notification_public_id = str(uuid.uuid4())
+    notification = Notification(notification_message, recipient_id, notification_date, notification_type, notification_public_id)
+    db.session.add(notification)
     db.session.commit()
     response_object = {
         'unit_id': payment.unit_id,

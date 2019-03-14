@@ -64,6 +64,7 @@ def tenant_statement(public_id):
         statement_dict['transaction_date'] = statement.transaction_date
         statement_dict['tenant_name'] = statement.tenant_name
         statement_dict['transaction_type'] = statement.transaction_type
+        statement_dict['statement_id'] = statement.statement_id
         statement_list.append(statement_dict)
     balance = total_credit - total_debit
     response_object['statement'] = statement_list
@@ -116,31 +117,36 @@ def landlord_statement(public_id):
                 unit_dict['statement_list'] = statement_list
                 unit_list.append(unit_dict)
                 lease = Lease.query.filter_by(unit_id=unit.unit_id, lease_status='Active').first()
-                statements = Statement.query.filter_by(unit_id=unit.unit_id, tenant_id=lease.tenant_id).all()
-                for statement in statements:
-                    statement_dict = {}
-                    if statement.transaction_type == 'Invoice':
-                        debit = 0
-                        credit = statement.net_amount
-                        total_debit = total_debit + debit
-                        total_credit = total_credit + credit
-                        statement_dict['debit'] = debit
-                        statement_dict['credit'] = credit
-                    elif not statement.transaction_type == 'Invoice':
-                        debit = statement.transaction_amount
-                        total_debit = total_debit + debit
-                        statement_dict['credit'] = 0
-                        statement_dict['debit'] = statement.transaction_amount
-                    statement_dict['transaction_date'] = statement.transaction_date
-                    statement_dict['transaction_type'] = statement.transaction_type
-                    unit_dict['tenant_name'] = statement.tenant_name
-                    block_dict['total_credit'] = total_credit
-                    block_dict['total_debit'] = total_debit
-                    property_dict['total_credit'] = total_credit
-                    property_dict['total_debit'] = total_debit
-                    user_dict['total_credit'] = total_credit
-                    user_dict['total_debit'] = total_debit
-                    statement_list.append(statement_dict)
+                if lease:
+                    statements = Statement.query.filter_by(unit_id=unit.unit_id, tenant_id=lease.tenant_id).all()
+                    if not statements:
+                        unit_dict['statement_list'] = 'Empty Unit'
+                    for statement in statements:
+                        statement_dict = {}
+                        if statement.transaction_type == 'Invoice':
+                            debit = 0
+                            credit = statement.net_amount
+                            total_debit = total_debit + debit
+                            total_credit = total_credit + credit
+                            statement_dict['debit'] = debit
+                            statement_dict['credit'] = credit
+                        elif not statement.transaction_type == 'Invoice':
+                            debit = statement.transaction_amount
+                            total_debit = total_debit + debit
+                            statement_dict['credit'] = 0
+                            statement_dict['debit'] = statement.transaction_amount
+                        statement_dict['transaction_date'] = statement.transaction_date
+                        statement_dict['transaction_type'] = statement.transaction_type
+                        unit_dict['tenant_name'] = statement.tenant_name
+                        block_dict['total_credit'] = total_credit
+                        block_dict['total_debit'] = total_debit
+                        property_dict['total_credit'] = total_credit
+                        property_dict['total_debit'] = total_debit
+                        user_dict['total_credit'] = total_credit
+                        user_dict['total_debit'] = total_debit
+                        statement_list.append(statement_dict)
+                else:
+                    unit_dict['tenant_name'] = 'Empty Unit'
     return jsonify(user_dict), 200
 
 
@@ -185,31 +191,37 @@ def property_manager_statement(public_id):
                 unit_dict['statement_list'] = statement_list
                 unit_list.append(unit_dict)
                 lease = Lease.query.filter_by(unit_id=unit.unit_id, lease_status='Active').first()
-                statements = Statement.query.filter_by(unit_id=unit.unit_id, tenant_id=lease.tenant_id).all()
-                for statement in statements:
-                    statement_dict = {}
-                    if statement.transaction_type == 'Invoice':
-                        debit = 0
-                        credit = statement.net_amount
-                        total_debit = total_debit + debit
-                        total_credit = total_credit + credit
-                        statement_dict['debit'] = debit
-                        statement_dict['credit'] = credit
-                    elif not statement.transaction_type == 'Invoice':
-                        debit = statement.transaction_amount
-                        total_debit = total_debit + debit
-                        statement_dict['credit'] = 0
-                        statement_dict['debit'] = statement.transaction_amount
-                    statement_dict['transaction_date'] = statement.transaction_date
-                    statement_dict['transaction_type'] = statement.transaction_type
-                    unit_dict['tenant_name'] = statement.tenant_name
-                    block_dict['total_credit'] = total_credit
-                    block_dict['total_debit'] = total_debit
-                    property_dict['total_credit'] = total_credit
-                    property_dict['total_debit'] = total_debit
-                    user_dict['total_credit'] = total_credit
-                    user_dict['total_debit'] = total_debit
-                    statement_list.append(statement_dict)
+                if lease:
+                    statements = Statement.query.filter_by(unit_id=unit.unit_id, tenant_id=lease.tenant_id).all()
+                    if not statements:
+                        unit_dict['statement_list'] = 'Empty Unit'
+                    for statement in statements:
+                        statement_dict = {}
+                        if statement.transaction_type == 'Invoice':
+                            debit = 0
+                            credit = statement.net_amount
+                            total_debit = total_debit + debit
+                            total_credit = total_credit + credit
+                            statement_dict['debit'] = debit
+                            statement_dict['credit'] = credit
+                        elif not statement.transaction_type == 'Invoice':
+                            debit = statement.transaction_amount
+                            total_debit = total_debit + debit
+                            statement_dict['credit'] = 0
+                            statement_dict['debit'] = statement.transaction_amount
+                        statement_dict['transaction_date'] = statement.transaction_date
+                        statement_dict['transaction_type'] = statement.transaction_type
+                        unit_dict['tenant_name'] = statement.tenant_name
+                        block_dict['total_credit'] = total_credit
+                        block_dict['total_debit'] = total_debit
+                        property_dict['total_credit'] = total_credit
+                        property_dict['total_debit'] = total_debit
+                        user_dict['total_credit'] = total_credit
+                        user_dict['total_debit'] = total_debit
+                        statement_list.append(statement_dict)
+                else:
+                    unit_dict['tenant_name'] = ' Empty Unit'
+
     return jsonify(user_dict), 200
 
 

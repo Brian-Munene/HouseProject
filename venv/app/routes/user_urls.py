@@ -19,6 +19,7 @@ from database.block import Property
 from database.block import Debt
 from database.block import Statement
 from database.block import PaymentType
+from database.block import Notification
 
 auth = HTTPBasicAuth()
 
@@ -90,6 +91,14 @@ def register():
             unit = Unit.query.get(unit_id)
             status = Status.query.filter_by(status_code=5).first()
             unit.unit_status = status.status_meaning
+            db.session.flush()
+            notification_message = 'Rent is due'
+            recipient_id = tenant.tenant_id
+            notification_date = lease.lease_begin_date
+            notification_type = 'Due Payment'
+            notification_public_id = str(uuid.uuid4())
+            notification = Notification(notification_message, recipient_id, notification_date, notification_type, notification_public_id)
+            db.session.add(notification)
             db.session.commit()
             response_object = {'message': "Your Tenant account has been created.",
                                'email': user.email,
