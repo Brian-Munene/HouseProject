@@ -1,5 +1,6 @@
 from flask import Flask, session, logging, request, json, jsonify
 from datetime import datetime
+import arrow
 import uuid
 #file imports
 from routes import app
@@ -253,18 +254,33 @@ def property_manager_complaints(public_id):
                 complaints = Complaint.query.filter_by(unit_id=unit.unit_id).all()
                 # complaints_list = []
                 for complaint in complaints:
-                    complaint_dict = {
-                        'complaint_id': complaint.complaint_id,
-                        'complaint_public_id': complaint.public_id,
-                        'property_id': property.property_id,
-                        'block_id': block.block_id,
-                        'unit_id': unit.unit_id,
-                        'unit_status': unit.unit_status,
-                        'date_posted': complaint.date_posted,
-                        'message': complaint.message,
-                        'due_date': complaint.due_date,
-                        'fixed_date': complaint.fixed_date
-                    }
+                    complaint_dict = {}
+                    if complaint.fixed_date == '0000-00-00':
+                        complaint_dict['complaint_id'] = complaint.complaint_id
+                        complaint_dict['complaint_public_id'] = complaint.public_id
+                        complaint_dict['property_id'] = property.property_id
+                        complaint_dict['property_name'] = property.property_name
+                        complaint_dict['block_id'] = block.block_id
+                        complaint_dict['unit_id'] = unit.unit_id
+                        complaint_dict['unit_status'] = unit.unit_status
+                        complaint_dict['date_posted'] = complaint.date_posted
+                        complaint_dict['message'] = complaint.message
+                        complaint_dict['due_date'] = complaint.due_date
+                        complaint_dict['fixed_date'] = complaint.fixed_date
+                        complaint_dict['status'] = 'Pending'
+                    else:
+                        complaint_dict['complaint_id'] = complaint.complaint_id
+                        complaint_dict['complaint_public_id'] = complaint.public_id
+                        complaint_dict['property_id'] = property.property_id
+                        complaint_dict['property_name'] = property.property_name
+                        complaint_dict['block_id'] = block.block_id
+                        complaint_dict['unit_id'] = unit.unit_id
+                        complaint_dict['unit_status'] = unit.unit_status
+                        complaint_dict['date_posted'] = complaint.date_posted
+                        complaint_dict['message'] = complaint.message
+                        complaint_dict['due_date'] = complaint.due_date
+                        complaint_dict['fixed_date'] = complaint.fixed_date
+                        complaint_dict['status'] = 'Fixed'
                     # complaints_list.append()
                     property_list.append(complaint_dict)
     return jsonify(property_list), 200
@@ -346,20 +362,37 @@ def landlord_complaints(public_id):
                         service_list.append(service_dict)
                         total_cost = total_cost + service.cost
                     service_total_cost = total_cost
-                    complaint_dict = {
-                        'complaint_id': complaint.complaint_id,
-                        'complaint_public_id': complaint.public_id,
-                        'property_name': property.property_name,
-                        'block_id': block.block_id,
-                        'unit_id': unit.unit_id,
-                        'unit_status': unit.unit_status,
-                        'date_posted': complaint.date_posted,
-                        'message': complaint.message,
-                        'due_date': complaint.due_date,
-                        'fixed_date': complaint.fixed_date,
-                        'total_service_cost': service_total_cost
-                    }
-
+                    complaint_dict = {}
+                    if complaint.fixed_date == '0000-00-00':
+                        complaint_dict['complaint_id'] = complaint.complaint_id
+                        complaint_dict['complaint_public_id'] = complaint.public_id
+                        complaint_dict['property_id'] = property.property_id
+                        complaint_dict['property_name'] = property.property_name
+                        complaint_dict['block_id'] = block.block_id
+                        complaint_dict['unit_id'] = unit.unit_id
+                        complaint_dict['unit_status'] = unit.unit_status
+                        complaint_dict['date_posted'] = complaint.date_posted
+                        complaint_dict['message'] = complaint.message
+                        complaint_dict['due_date'] = complaint.due_date
+                        complaint_dict['fixed_date'] = complaint.fixed_date
+                        complaint_dict['status'] = 'Pending'
+                        complaint_dict['services'] = service_list
+                        complaint_dict['total_service_cost'] = service_total_cost
+                    else:
+                        complaint_dict['complaint_id'] = complaint.complaint_id
+                        complaint_dict['complaint_public_id'] = complaint.public_id
+                        complaint_dict['property_id'] = property.property_id
+                        complaint_dict['property_name'] = property.property_name
+                        complaint_dict['block_id'] = block.block_id
+                        complaint_dict['unit_id'] = unit.unit_id
+                        complaint_dict['unit_status'] = unit.unit_status
+                        complaint_dict['date_posted'] = complaint.date_posted
+                        complaint_dict['message'] = complaint.message
+                        complaint_dict['due_date'] = complaint.due_date
+                        complaint_dict['fixed_date'] = complaint.fixed_date
+                        complaint_dict['status'] = 'Fixed'
+                        complaint_dict['services'] = service_list
+                        complaint_dict['total_service_cost'] = service_total_cost
                     property_list.append(complaint_dict)
     return jsonify(property_list), 200
         

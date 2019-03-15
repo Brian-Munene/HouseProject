@@ -38,6 +38,20 @@ def register():
         user_public_id = str(uuid.uuid4())
         status_active = Status.query.filter_by(status_code=3).first()
         account_status = status_active.status_meaning
+        if category == 'super admin':
+            if email is None or password is None or category is None:
+                return jsonify({'message': 'Fill all details'}), 400  # missing arguments
+            response_object = {}
+            user = User(email, category, account_status, user_public_id)
+            user.hash_password(password)
+            db.session.add(user)
+            db.session.commit()
+            response_object['message'] = 'Your Super user account is ready.'
+            response_object['email'] = user.email
+            response_object['account_status'] = user.account_status
+            response_object['user_type'] = user.category
+            response_object['public_id'] = user.public_id
+            return jsonify(response_object), 200
         if email is None or password is None or category is None or first_name is None or last_name is None or phone is None:
             return jsonify({'message': 'Fill all details'}), 400   # missing arguments
         if User.query.filter_by(email=email).first() is not None:
@@ -168,7 +182,7 @@ def register():
                                'public_id': user.public_id}
             return jsonify(response_object), 201
         else:
-            return jsonify({'error': 'Not a valid category'})
+            return jsonify({'message': 'Not a valid category'})
     return "Invalid Method", 400
 
 
@@ -183,63 +197,73 @@ def login():
             return "Missing arguments", 400   # missing arguments
         user = User.query.filter_by(email=email, account_status='Active').first()
         if user and user.verify_password(password):
-	        if user.category == 'tenant':
-		        tenant = Tenant.query.filter_by(email=email).first()
-		        lease = Lease.query.filter_by(tenant_id=tenant.tenant_id).first()
-		        app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
-		        response_object = {
-			        'message': 'Successfully Logged in.',
-			        'status': 'success',
-			        'public_id': user.public_id,
-			        'user_type': user.category,
-			        'firstname': tenant.first_name,
-			        'lastname': tenant.last_name,
-			        'email': user.email,
-			        'unit_id': lease.unit_id,
-			        'tenant_id': lease.tenant_id
-		        }
-		        return jsonify(response_object), 200
-	        elif user.category == 'landlord':
-		        landlord = Landlord.query.filter_by(email=email).first()
-		        app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
-		        response_object = {
-			        'message': 'Successfully Logged in.',
-			        'status': 'success',
-			        'public_id': user.public_id,
-			        'user_type': user.category,
-			        'firstname': landlord.first_name,
-			        'lastname': landlord.last_name,
-			        'email': user.email
-		        }
-		        return jsonify(response_object), 200
-	        elif user.category == 'caretaker':
-		        caretaker = Caretaker.query.filter_by(email=email).first()
-		        app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
-		        response_object = {
-			        'message': 'Successfully Logged in.',
-			        'status': 'success',
-			        'public_id': user.public_id,
-			        'user_type': user.category,
-			        'firstname': caretaker.first_name,
-			        'lastname': caretaker.last_name,
-			        'email': user.email
-		        }
-		        return jsonify(response_object), 200
-	        elif user.category == "property manager":
-		        manager = PropertyManager.query.filter_by(email=email).first()
-		        app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
-		        response_object = {
-			        'message': 'Successfully Logged in.',
-			        'status': 'success',
-			        'public_id': user.public_id,
-			        'user_type': user.category,
-			        'firstname': manager.first_name,
-			        'lastname': manager.last_name,
-			        'email': user.email
-		        }
-		        return jsonify(response_object), 200
-	        else:
-		        return jsonify({'message': 'User details are unavailable'})
+            if user.category == 'tenant':
+                tenant = Tenant.query.filter_by(email=email).first()
+                lease = Lease.query.filter_by(tenant_id=tenant.tenant_id).first()
+                app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+                response_object = {
+                    'message': 'Successfully Logged in.',
+                    'status': 'success',
+                    'public_id': user.public_id,
+                    'user_type': user.category,
+                    'firstname': tenant.first_name,
+                    'lastname': tenant.last_name,
+                    'email': user.email,
+                    'unit_id': lease.unit_id,
+                    'tenant_id': lease.tenant_id
+                }
+                return jsonify(response_object), 200
+            elif user.category == 'landlord':
+                landlord = Landlord.query.filter_by(email=email).first()
+                app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+                response_object = {
+                    'message': 'Successfully Logged in.',
+                    'status': 'success',
+                    'public_id': user.public_id,
+                    'user_type': user.category,
+                    'firstname': landlord.first_name,
+                    'lastname': landlord.last_name,
+                    'email': user.email
+                }
+                return jsonify(response_object), 200
+
+            elif user.category == 'caretaker':
+                caretaker = Caretaker.query.filter_by(email=email).first()
+                app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+                response_object = {
+                    'message': 'Successfully Logged in.',
+                    'status': 'success',
+                    'public_id': user.public_id,
+                    'user_type': user.category,
+                    'firstname': caretaker.first_name,
+                    'lastname': caretaker.last_name,
+                    'email': user.email
+                }
+                return jsonify(response_object), 200
+            elif user.category == "property manager":
+                manager = PropertyManager.query.filter_by(email=email).first()
+                app.logger.info('{0}successful log in at {1}'.format(user.user_id, datetime.now()))
+                response_object = {
+                    'message': 'Successfully Logged in.',
+                    'status': 'success',
+                    'public_id': user.public_id,
+                    'user_type': user.category,
+                    'firstname': manager.first_name,
+                    'lastname': manager.last_name,
+                    'email': user.email
+                }
+                return jsonify(response_object), 200
+            elif user.category == "super admin":
+                response_object = {
+                    'message': 'Successfully Logged in.',
+                    'public_id': user.public_id,
+                    'status': 'success',
+                    'email': user.email,
+                    'user_type': user.category
+                }
+                return jsonify(response_object), 200
+            else:
+                return jsonify({'message': 'User details are currently unavailable'}), 400
         else:
             app.logger.warning('{0} tried to log in at {1}'.format(email, datetime.now()))
 
@@ -247,8 +271,6 @@ def login():
                 'message': 'Incorrect username or password'
             }
             return jsonify(response_object), 422
-
-
     except(Exception, NameError, TypeError, RuntimeError, ValueError) as identifier:
         response_object = {
             'status': str(identifier),

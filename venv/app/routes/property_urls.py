@@ -234,6 +234,48 @@ def landlord_properties(public_id):
     return jsonify({'data': properties_list})
 
 
+#Vacant Properties using manager's user_public_id
+@app.route('/VacantProperties/<public_id>')
+def vacant_properties(public_id):
+    user = User.query.filter_by(public_id=public_id).first()
+    if not user:
+        return jsonify({'message': 'Please log in to use view properties'}), 400
+    manager = PropertyManager.query.filter_by(email=user.email).first()
+    if not manager:
+        return jsonify({'message': 'Only managers can view properties'}), 400
+    properties = Property.query.filter_by(manager_id=manager.manager_id).all()
+    if not properties:
+        return jsonify({'Error': 'No properties available.'}), 200
+    properties_list = []
+    for property in properties:
+        block_list = []
+        properties_dict = {
+            'property_public_id': property.public_id,
+            'Property_name': property.property_name,
+            'block_list': block_list
+        }
+        properties_list.append(properties_dict)
+        blocks = Block.query.filter_by(property_id=property.property_id)
+        if not blocks:
+            properties_dict['block_list'] = 'No Blocks'
+        for block in blocks:
+            block_dict = {}
+            units = Unit.query.filter_by(block_id=block.block_id, unit_status='Empty').all()
+            if not units:
+                block_dict['block_name'] = 'Empty Unit'
+            unit_list = []
+            block_dict['block_name'] = block.block_name
+            block_dict['block_public_id'] = block.public_id,
+            block_dict['unit_list'] = unit_list
+            block_list.append(block_dict)
+            for unit in units:
+                unit_dict = {}
+                unit_dict['unit_id'] = unit.unit_id
+                unit_dict['unit_number'] = unit.unit_number
+                unit_list.append(unit_dict)
+    return jsonify(properties_list), 200
+
+
 # Update Property Details
 @app.route('/UpdateProperty/<public_id>', methods=['GET', 'POST'])
 def update_property(public_id):
