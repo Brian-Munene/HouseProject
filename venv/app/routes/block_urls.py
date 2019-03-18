@@ -9,6 +9,7 @@ from database.block import Block
 from database.block import Property
 from database.block import Tenant
 from database.block import Lease
+from database.block import Status
 
 
 #Create a block using property's public_id
@@ -20,20 +21,38 @@ def insert_block(public_id):
         number_of_units = request_json.get('units')
         property = Property.query.filter_by(public_id=public_id).first()
         block_public_id = str(uuid.uuid4())
-        if block_name is None:
+        if not block_name:
             return jsonify({'message': 'Fields cannot be null'}), 400
         elif not property:
             return jsonify({'message': 'property does not exist'}), 400
         block = Block(property.property_id, block_name, number_of_units, block_public_id)
         db.session.add(block)
         db.session.commit()
+        unit_list = []
+        units_number = int(number_of_units) + 1
+        for i in range(1, units_number):
+            unit_number = property.property_name + '-' + block.block_name + '-U' + str(i)
+            status_occupied = Status.query.filter_by(status_code=6).first()
+            unit_status = status_occupied.status_meaning
+            unit_public_id = str(uuid.uuid4())
+            unit = Unit(block.block_id, unit_number, unit_status, unit_public_id)
+            db.session.add(unit)
+            db.session.commit()
+            unit_dict = {
+                'unit_id': unit.unit_id,
+                'unit_public_id': unit.public_id,
+                'unit_number': unit.unit_number
+            }
+            unit_list.append(unit_dict)
+
         response_object = {
             'status': 'block successfully created',
             'block_name': block.block_name,
             'public_id': block.public_id,
             'property_id': block.property_id,
             'block_id': block.block_id,
-            'units': block.number_of_units
+            'number_of_units': block.number_of_units,
+            'units': unit_list
         }
         return jsonify(response_object), 201
 

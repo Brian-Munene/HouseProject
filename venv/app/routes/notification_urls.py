@@ -21,7 +21,7 @@ def rent_due(public_id):
     if not user:
         return jsonify({'message': 'You should be a user to get notifications'}), 400
     tenant = Tenant.query.filter_by(email=user.email).first()
-    tenant_name = tenant.first_name + ' ' + tenant.last_name
+    # tenant_name = tenant.first_name + ' ' + tenant.last_name
     if not tenant:
         return jsonify({'message': 'Only tenant get notifications'}), 400
     lease = Lease.query.filter_by(tenant_id=tenant.tenant_id, lease_status='Active').first()
@@ -34,12 +34,12 @@ def rent_due(public_id):
             if statement.transaction_type == 'Invoice':
                 statement_dict['transaction_date'] = statement.transaction_date
                 statement_dict['transaction_type'] = statement.transaction_type
-                statement_dict['credit'] = statement.transaction_amount
+                statement_dict['amount'] = statement.transaction_amount
                 statement_list.append(statement_dict)
             else:
                 statement_dict['transaction_date'] = statement.transaction_date
                 statement_dict['transaction_type'] = statement.transaction_type
-                statement_dict['credit'] = statement.transaction_amount
+                statement_dict['amount'] = statement.transaction_amount
                 statement_list.append(statement_dict)
         return jsonify(statement_list), 200
     elif lease.lease_end_date == current_date:

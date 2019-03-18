@@ -110,37 +110,24 @@ def landlord_statement(public_id):
             block_dict['unit_list'] = unit_list
             block_list.append(block_dict)
             units = Unit.query.filter_by(block_id=block.block_id).all()
-            keys = []# Key to loop through each unit
             for unit in units:
                 statement_list = []
                 unit_dict = {}
                 unit_dict['unit_number'] = unit.unit_number
                 unit_dict['statement_list'] = statement_list
                 unit_list.append(unit_dict)
-                keys.append(unit.unit_id)
                 lease = Lease.query.filter_by(unit_id=unit.unit_id, lease_status='Active').first()
                 if lease:
+                    debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
+                    if not debt:
+                        return jsonify({'message': 'No details available'}), 400
+                    unit_dict['credit'] = debt.bill_amount
+                    unit_dict['debit'] = debt.paid_amount
                     statements = Statement.query.filter_by(unit_id=unit.unit_id, tenant_id=lease.tenant_id).all()
                     if not statements:
                         unit_dict['statement_list'] = 'Empty Unit'
-                    for key in keys:
-                        # if key == statement.unit_id:
                         for statement in statements:
                             statement_dict = {}
-                            if statement.transaction_type == 'Invoice':
-                                debit = 0
-                                credit = statement.net_amount
-                                total_debit = total_debit + debit
-                                total_credit = total_credit + credit
-                                statement_dict['debit'] = debit
-                                statement_dict['credit'] = credit
-                                unit_dict['credit'] = total_credit
-                            elif not statement.transaction_type == 'Invoice':
-                                debit = statement.transaction_amount
-                                total_debit = total_debit + debit
-                                statement_dict['credit'] = 0
-                                statement_dict['debit'] = statement.transaction_amount
-                                unit_dict['debit'] = total_debit
                             statement_dict['transaction_date'] = statement.transaction_date
                             statement_dict['transaction_type'] = statement.transaction_type
                             statement_dict['statement_id'] = statement.statement_id
@@ -152,8 +139,8 @@ def landlord_statement(public_id):
                             user_dict['total_credit'] = total_credit
                             user_dict['total_debit'] = total_debit
                             statement_list.append(statement_dict)
-                    else:
-                        unit_dict['tenant_name'] = 'Empty Unit'
+                else:
+                    unit_dict['tenant_name'] = 'No Tenant'
     return jsonify(user_dict), 200
 
 
@@ -167,7 +154,7 @@ def property_manager_statement(public_id):
     manager_name = manager.first_name + ' ' + manager.last_name
     if not manager:
         return jsonify({'message': 'Only landlord can view this statement'}), 400
-    properties = Property.query.filter_by(manager_id = manager.manager_id).all()
+    properties = Property.query.filter_by(manager_id=manager.manager_id).all()
     if not properties:
         return jsonify({'message': 'No properties available'}), 400
     user_dict = {}

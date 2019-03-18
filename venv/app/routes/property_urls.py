@@ -251,6 +251,7 @@ def vacant_properties(public_id):
         block_list = []
         properties_dict = {
             'property_public_id': property.public_id,
+            'property_id': property.property_id,
             'Property_name': property.property_name,
             'block_list': block_list
         }
