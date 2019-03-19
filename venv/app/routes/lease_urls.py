@@ -1,0 +1,123 @@
+from flask import Flask, session, logging, send_from_directory, send_file, request, json, jsonify
+import arrow
+import uuid
+import os
+#file imports
+from routes import app
+from routes import db
+from database.block import Payment
+from database.unit import Unit
+from database.block import Lease
+from database.block import Debt
+from database.user import User
+from database.block import Tenant
+from database.block import Status
+from database.block import Statement
+from database.block import Landlord
+from database.block import Property
+from database.block import Block
+from database.unit import Unit
+from database.block import PropertyManager
+
+
+#View Leases using property manager user public_id
+@app.route('/ManagerLeases/<public_id>')
+def lease(public_id):
+    user = User.query.filter_by(public_id=public_id).first()
+    if not user:
+        return jsonify({'message': 'You must be a user to renew a lease'}), 400
+    manager = PropertyManager.query.filter_by(email=user.email).first()
+    if not manager:
+        return jsonify({'message': 'You should be a manager to renew a lease'}), 400
+    properties = Property.query.filter_by(manager_id=manager.manager_id).all()
+    if not properties:
+        return jsonify({'message': 'No Properties available'}), 400
+    property_list = []
+    for property in properties:
+        property_dict = {}
+        block_list = []
+        property_dict['block_list'] = block_list
+        property_list.append(property_dict)
+        blocks = Block.query.filter_by(property_id=property.property_id).all()
+        if not blocks:
+            property_dict['block_list'] = 'No lease available for that Block'
+            # return jsonify({'message': 'No lease available for that Block'}), 400
+        for block in blocks:
+            unit_list = []
+            block_dict = {}
+            units = Unit.query.filter_by(block_id=block.block_id).all()
+            block_dict['unit_list'] = unit_list
+            block_list.append(block_dict)
+            if not units:
+                # return jsonify({'message': 'Invalid Unit'}), 400
+                block_dict['unit_list'] = 'No lease available for that unit'
+            for unit in units:
+                lease_list = []
+                unit_dict = {}
+                leases = Lease.query.filter_by(unit_id=unit.unit_id).all()
+                unit_dict['lease_list'] = lease_list
+                unit_list.append(unit_dict)
+                if not leases:
+                    # return jsonify({'message': 'No lease available for that Unit'}), 400
+                    unit_dict['lease_list'] = 'No lease available for that unit'
+                for lease in leases:
+                    lease_dict = {}
+                    tenant = Tenant.query.filter_by(tenant_id=lease.tenant_id).first()
+                    tenant_name = tenant.first_name + ' ' + tenant.last_name
+                    lease_dict['tenant_name'] = tenant_name
+                    property_dict['tenant_property'] = property.property_name
+                    property_dict['property_id'] = property.property_id
+                    lease_dict['tenant_block'] = block.block_name
+                    lease_dict['block_id'] = block.block_id
+                    lease_dict['tenant_unit_name'] = unit.unit_number
+                    lease_dict['tenant_public_id'] = tenant.public_id
+                    lease_dict['lease_status'] = lease.lease_status
+                    lease_dict['lease_public_id'] = lease.public_id
+                    lease_dict['lease_amount'] = lease.lease_amount
+                    lease_dict['service_charges'] = lease.service_charges
+                    lease_dict['lease_begin_date'] = lease.lease_begin_date
+                    lease_dict['lease_end_date'] = lease.lease_end_date
+                    debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
+                    balance = debt.bill_amount - debt.paid_amount
+                    lease_dict['tenant_balance'] = balance
+                    lease_list.append(lease_dict)
+    return jsonify(property_list), 200
+
+
+# Renew a Tenant's lease using tenant's public_id
+@app.route('/RenewLease/<public_id>', methods=['GET', 'POST'])
+def renew_lease(public_id):
+   if request.method =='POST':
+       tenant = Tenant.query.filter_by(public_id=public_id).first()
+       if not tenant:
+           return jsonify({'message': 'Invalid tenant'}), 400
+       lease = Lease.query.filter_by(tenant_id=tenant.tenant_id, lease_status='Active').first()
+       if lease:
+           return jsonify({'message you cannot renew your lease while it is active.'}), 400
+       else:
+           request_json = request.get_json()
+           unit_id = request_json.get('unit_id')
+           lease_begin_date = request_json.get('lease_begin_date')
+           lease_end_date = request_json.get('lease_end_date')
+           lease_amount = request_json.get('lease_amount')
+           promises = request_json.get('promises')
+           service_charges = request_json.get('service_charges')
+           notes = request_json.get('notes')
+           lease_public_id = str(uuid.uuid4())
+           status_active = Status.query.filter_by(status_code=3).first()
+           lease_status = status_active.status_meaning
+           payment_interval = request_json.get('payment_interval')
+           lease = Lease(tenant.tenant_id, unit_id, lease_begin_date, lease_end_date, lease_amount, promises,
+                         service_charges, notes,
+                         lease_status,
+                         payment_interval, lease_public_id)
+           db.session.add(lease)
+           db.session.commit()
+   elif request.method == 'GET':
+       tenant = Tenant.query.filter_by(public_id=public_id).first()
+       if not tenant:
+           return jsonify({'message': 'Invalid tenant'}), 400
+       lease = Lease.query.filter_by(tenant_id=tenant.tenant_id, lease_status='Active').first()
+       if lease:
+           return jsonify({'message you cannot renew your lease while it is active.'}), 400
+
