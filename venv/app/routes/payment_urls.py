@@ -41,56 +41,102 @@ def insert_payment(public_id):
         return jsonify({'message': 'No such unit.'}), 422
     if not Unit.query.filter_by(unit_status='Empty'):
         return jsonify({'message': 'That unit is currently empty'}), 422
-    lease = Lease.query.filter_by(tenant_id=tenant.tenant_id, lease_status='Active').first()
-    debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
-    payment = Payment(unit_id, amount_paid, payment_type, debt.debt_id, payment_public_id)
-    db.session.add(payment)
-    db.session.flush()
-    debt.paid_amount = debt.paid_amount + payment.amount_paid
-    db.session.flush()
-    if debt.paid_amount == debt.bill_amount:
-        payment_status = Status.query.filter_by(status_code=8).first()
-        fully_paid = payment_status.status_meaning
-        debt.debt_status = fully_paid
+    lease = Lease.query.filter_by(tenant_id=tenant.tenant_id).first()
+    if lease.lease_status == 'Active':
+        debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
+        payment = Payment(unit_id, amount_paid, payment_type, debt.debt_id, payment_public_id)
+        db.session.add(payment)
+        db.session.flush()
+        debt.paid_amount = debt.paid_amount + payment.amount_paid
+        db.session.flush()
+        if debt.paid_amount == debt.bill_amount:
+            payment_status = Status.query.filter_by(status_code=8).first()
+            fully_paid = payment_status.status_meaning
+            debt.debt_status = fully_paid
+            db.session.commit()
+        elif debt.paid_amount < debt.bill_amount:
+            payment_status = Status.query.filter_by(status_code=9).first()
+            partially_paid = payment_status.status_meaning
+            debt.debt_status = partially_paid
+            db.session.commit()
+        elif debt.paid_amount > debt.bill_amount:
+            payment_status = Status.query.filter_by(status_code=11).first()
+            over_paid = payment_status.status_meaning
+            debt.debt_status = over_paid
+            db.session.commit()
+        amount_left = debt.bill_amount - debt.paid_amount
+        tenant_name = tenant.first_name + ' ' + tenant.last_name
+        transaction_date = payment.date_paid
+        statement_public_id = str(uuid.uuid4())
+        statement = Statement(tenant.tenant_id, unit_id, tenant_name, payment_type, amount_paid, amount_left,
+                              transaction_date, statement_public_id)
+        db.session.add(statement)
         db.session.commit()
-    elif debt.paid_amount < debt.bill_amount:
-        payment_status = Status.query.filter_by(status_code=9).first()
-        partially_paid = payment_status.status_meaning
-        debt.debt_status = partially_paid
+        response_object = {
+            'unit_id': payment.unit_id,
+            'amount_paid': payment.amount_paid,
+            'date_paid': payment.date_paid,
+            'amount_left': amount_left
+        }
+        return jsonify({'header': {
+            'status': 'success',
+            'payment_amount': amount_paid,
+            'date_paid': payment.date_paid,
+            'balance': amount_left,
+        },
+            'data': response_object}), 201
+    elif lease.lease_status == 'Pending':
+        debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
+        payment = Payment(unit_id, amount_paid, payment_type, debt.debt_id, payment_public_id)
+        db.session.add(payment)
+        db.session.flush()
+        debt.paid_amount = debt.paid_amount + payment.amount_paid
+        db.session.flush()
+        if debt.paid_amount == debt.bill_amount:
+            payment_status = Status.query.filter_by(status_code=8).first()
+            fully_paid = payment_status.status_meaning
+            debt.debt_status = fully_paid
+            db.session.commit()
+            inactive = Status.query.filter_by(status_code=4).first()
+            lease.lease_status = inactive.status_meaning
+            db.session.commit()
+        elif debt.paid_amount < debt.bill_amount:
+            payment_status = Status.query.filter_by(status_code=9).first()
+            partially_paid = payment_status.status_meaning
+            debt.debt_status = partially_paid
+            db.session.commit()
+        elif debt.paid_amount > debt.bill_amount:
+            payment_status = Status.query.filter_by(status_code=11).first()
+            over_paid = payment_status.status_meaning
+            debt.debt_status = over_paid
+            db.session.commit()
+            inactive = Status.query.filter_by(status_code=4).first()
+            lease.lease_status = inactive.status_meaning
+            db.session.commit()
+        amount_left = debt.bill_amount - debt.paid_amount
+        tenant_name = tenant.first_name + ' ' + tenant.last_name
+        transaction_date = payment.date_paid
+        statement_public_id = str(uuid.uuid4())
+        statement = Statement(tenant.tenant_id, unit_id, tenant_name, payment_type, amount_paid, amount_left,
+                              transaction_date, statement_public_id)
+        db.session.add(statement)
         db.session.commit()
-    elif debt.paid_amount > debt.bill_amount:
-        payment_status = Status.query.filter_by(status_code=11).first()
-        over_paid = payment_status.status_meaning
-        debt.debt_status = over_paid
-        db.session.commit()
-    amount_left = debt.bill_amount - debt.paid_amount
-    tenant_name = tenant.first_name + ' ' + tenant.last_name
-    transaction_date = payment.date_paid
-    statement_public_id = str(uuid.uuid4())
-    statement = Statement(tenant.tenant_id, unit_id, tenant_name, payment_type, amount_paid, amount_left, transaction_date, statement_public_id)
-    db.session.add(statement)
-    db.session.flush()
-    notification_message = 'Payment ' + str(amount_paid) + ' has been received'
-    recipient_id = tenant.tenant_id
-    notification_date = lease.lease_begin_date
-    notification_type = 'Due Payment'
-    notification_public_id = str(uuid.uuid4())
-    notification = Notification(notification_message, recipient_id, notification_date, notification_type, notification_public_id)
-    db.session.add(notification)
-    db.session.commit()
-    response_object = {
-        'unit_id': payment.unit_id,
-        'amount_paid': payment.amount_paid,
-        'date_paid': payment.date_paid,
-        'amount_left': amount_left
-    }
-    return jsonify({'header': {
-      'status': 'success',
-      'payment_amount': amount_paid,
-      'date_paid': payment.date_paid,
-      'balance': amount_left,
-    },
-        'data': response_object}), 201
+        response_object = {
+            'unit_id': payment.unit_id,
+            'amount_paid': payment.amount_paid,
+            'date_paid': payment.date_paid,
+            'amount_left': amount_left,
+            'lease_status': lease.lease_status
+        }
+        return jsonify({'header': {
+            'status': 'success',
+            'payment_amount': amount_paid,
+            'date_paid': payment.date_paid,
+            'balance': amount_left,
+        },
+            'data': response_object}), 201
+    elif lease.lease_status:
+        return jsonify({'message': "You have no active Lease"}), 400
 
 
 #View Tenant payments using user's public_id

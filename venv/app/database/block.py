@@ -199,7 +199,7 @@ class Lease(db.Model):
     # Relationships
     debts = db.relationship('Debt', backref='leases', lazy=True)
 
-    def __init__(self, tenant_id, unit_id, lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes, lease_status, paymnet_interval, public_id):
+    def __init__(self, tenant_id, unit_id, lease_begin_date, lease_end_date, lease_amount, promises, service_charges, notes, lease_status, payment_interval, public_id):
         self.tenant_id = tenant_id
         self.unit_id = unit_id
         self.public_id = public_id
@@ -210,7 +210,7 @@ class Lease(db.Model):
         self.service_charges = service_charges
         self.notes = notes
         self.lease_status = lease_status
-        self.payment_interval = paymnet_interval
+        self.payment_interval = payment_interval
 
 # Status Model
 class Status(db.Model):

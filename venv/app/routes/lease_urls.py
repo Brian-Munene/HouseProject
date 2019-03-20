@@ -34,40 +34,30 @@ def lease(public_id):
         return jsonify({'message': 'No Properties available'}), 400
     property_list = []
     for property in properties:
-        property_dict = {}
-        block_list = []
-        property_dict['block_list'] = block_list
-        property_list.append(property_dict)
+        lease_dict = {}
         blocks = Block.query.filter_by(property_id=property.property_id).all()
         if not blocks:
-            property_dict['block_list'] = 'No lease available for that Block'
+            lease_dict['block_list'] = 'No lease available for that Block'
             # return jsonify({'message': 'No lease available for that Block'}), 400
         for block in blocks:
-            unit_list = []
-            block_dict = {}
             units = Unit.query.filter_by(block_id=block.block_id).all()
-            block_dict['unit_list'] = unit_list
-            block_list.append(block_dict)
             if not units:
                 # return jsonify({'message': 'Invalid Unit'}), 400
-                block_dict['unit_list'] = 'No lease available for that unit'
+                lease_dict['unit_list'] = 'No lease available for that unit'
             for unit in units:
-                lease_list = []
-                unit_dict = {}
                 leases = Lease.query.filter_by(unit_id=unit.unit_id).all()
-                unit_dict['lease_list'] = lease_list
-                unit_list.append(unit_dict)
                 if not leases:
                     # return jsonify({'message': 'No lease available for that Unit'}), 400
-                    unit_dict['lease_list'] = 'No lease available for that unit'
+                    lease_dict['lease_list'] = 'No lease available for that unit'
                 for lease in leases:
                     lease_dict = {}
                     tenant = Tenant.query.filter_by(tenant_id=lease.tenant_id).first()
                     tenant_name = tenant.first_name + ' ' + tenant.last_name
                     lease_dict['tenant_name'] = tenant_name
-                    property_dict['tenant_property'] = property.property_name
-                    property_dict['property_id'] = property.property_id
+                    lease_dict['tenant_property'] = property.property_name
+                    lease_dict['property_id'] = property.property_id
                     lease_dict['tenant_block'] = block.block_name
+                    lease_dict['unit_id'] = unit.unit_id
                     lease_dict['block_id'] = block.block_id
                     lease_dict['tenant_unit_name'] = unit.unit_number
                     lease_dict['tenant_public_id'] = tenant.public_id
@@ -80,44 +70,170 @@ def lease(public_id):
                     debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
                     balance = debt.bill_amount - debt.paid_amount
                     lease_dict['tenant_balance'] = balance
-                    lease_list.append(lease_dict)
+                    property_list.append(lease_dict)
     return jsonify(property_list), 200
 
 
 # Renew a Tenant's lease using tenant's public_id
 @app.route('/RenewLease/<public_id>', methods=['GET', 'POST'])
 def renew_lease(public_id):
-   if request.method =='POST':
+   if request.method == 'POST':
        tenant = Tenant.query.filter_by(public_id=public_id).first()
        if not tenant:
            return jsonify({'message': 'Invalid tenant'}), 400
-       lease = Lease.query.filter_by(tenant_id=tenant.tenant_id, lease_status='Active').first()
-       if lease:
-           return jsonify({'message you cannot renew your lease while it is active.'}), 400
-       else:
-           request_json = request.get_json()
-           unit_id = request_json.get('unit_id')
-           lease_begin_date = request_json.get('lease_begin_date')
-           lease_end_date = request_json.get('lease_end_date')
-           lease_amount = request_json.get('lease_amount')
-           promises = request_json.get('promises')
-           service_charges = request_json.get('service_charges')
-           notes = request_json.get('notes')
-           lease_public_id = str(uuid.uuid4())
-           status_active = Status.query.filter_by(status_code=3).first()
-           lease_status = status_active.status_meaning
-           payment_interval = request_json.get('payment_interval')
-           lease = Lease(tenant.tenant_id, unit_id, lease_begin_date, lease_end_date, lease_amount, promises,
-                         service_charges, notes,
-                         lease_status,
-                         payment_interval, lease_public_id)
-           db.session.add(lease)
-           db.session.commit()
+       lease = Lease.query.filter_by(tenant_id=tenant.tenant_id, lease_status='Inactive').first()
+       if not lease:
+           return jsonify({'message': 'You cannot renew your lease while you have an existing active lease.'}), 400
+       debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
+       balance = debt.bill_amount - debt.paid_amount
+       if not debt.debt_status == 'Fully Paid' or debt.debt_status == 'Over Paid':
+           return jsonify({'message': 'Settle your debt of ' + str(balance) + ' before renewing your lease.'}), 400
+       request_json = request.get_json()
+       unit_id = request_json.get('unit_id')
+       lease_begin_date = request_json.get('lease_begin_date')
+       lease_end_date = request_json.get('lease_end_date')
+       lease_amount = request_json.get('lease_amount')
+       promises = request_json.get('promises')
+       service_charges = request_json.get('service_charges')
+       notes = request_json.get('notes')
+       lease_public_id = str(uuid.uuid4())
+       status_active = Status.query.filter_by(status_code=3).first()
+       lease_status = status_active.status_meaning
+       payment_interval = request_json.get('payment_interval')
+       lease = Lease(tenant.tenant_id, unit_id, lease_begin_date, lease_end_date, lease_amount, promises,
+                     service_charges, notes,
+                     lease_status,
+                     payment_interval, lease_public_id)
+       db.session.add(lease)
+       db.session.commit()
    elif request.method == 'GET':
        tenant = Tenant.query.filter_by(public_id=public_id).first()
        if not tenant:
            return jsonify({'message': 'Invalid tenant'}), 400
-       lease = Lease.query.filter_by(tenant_id=tenant.tenant_id, lease_status='Active').first()
-       if lease:
-           return jsonify({'message you cannot renew your lease while it is active.'}), 400
+       tenant_name = tenant.first_name + ' ' + tenant.last_name
+       lease = Lease.query.filter_by(tenant_id=tenant.tenant_id, lease_status='Inactive').first()
+       if not lease:
+           return jsonify({'message': 'You cannot renew your lease while you have an existing active lease.'}), 400
+       response_object = {
+           'unit_id': lease.unit_id,
+           'tenant_name': tenant_name,
+           'tenant_id': tenant.tenant_id,
+           'lease_begin_date': lease.lease_begin_date,
+           'lease_amount': lease.lease_amount,
+           'lease_end_date': lease.lease_end_date,
+           'promises': lease.promises,
+           'notes': lease.notes,
+           'service_charges': lease.service_charges,
+           'lease_status': lease.lease_status,
+           'payment_interval': lease.payment_interval
+       }
+       return jsonify(response_object), 200
 
+
+#Terminate a lease using tenant's public_id
+@app.route('/TerminateLease/<public_id>', methods=['PUT'])
+def terminate_lease(public_id):
+    tenant = Tenant.query.filter_by(public_id=public_id).first()
+    new_unit_status = Status.query.filter_by(status_code=6).first()
+    if not tenant:
+        return jsonify({'message': 'Invalid Tenant.'}), 400
+    tenant_name = tenant.first_name + ' ' + tenant.last_name
+    lease = Lease.query.filter_by(tenant_id=tenant.tenant_id).first()
+    if lease.lease_status == 'Inactive' or lease.lease_status == 'Pending':
+        return jsonify({'message': 'The lease is already inactive.'}), 400
+    debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
+    balance = debt.bill_amount - debt.paid_amount
+    if debt.debt_status == 'Fully Paid' or debt.debt_status == 'Over Paid':
+        status = Status.query.filter_by(status_code=4).first()
+        inactivate = status.status_meaning
+        lease.lease_status = inactivate
+        db.session.flush()
+        unit = Unit.query.filter_by(unit_id=lease.unit_id).first()
+        unit.unit_status = new_unit_status.status_meaning
+        db.session.commit()
+        response_object = {
+            'tenant_name': tenant_name,
+            'lease_begin_date': lease.lease_begin_date,
+            'lease_amount': lease.lease_amount,
+            'lease_end_date': lease.lease_end_date,
+            'promises': lease.promises,
+            'notes': lease.notes,
+            'balance': balance,
+            'lease_status': lease.lease_status
+        }
+        return jsonify(response_object), 200
+    else:
+        status = Status.query.filter_by(status_code=13).first()
+        pending = status.status_meaning
+        lease.lease_status = pending
+        db.session.flush()
+        unit = Unit.query.filter_by(unit_id=lease.unit_id).first()
+        unit.unit_status = new_unit_status.status_meaning
+        db.session.commit()
+        response_object = {
+            'tenant_name': tenant_name,
+            'lease_begin_date': lease.lease_begin_date,
+            'lease_amount': lease.lease_amount,
+            'lease_end_date': lease.lease_end_date,
+            'promises': lease.promises,
+            'notes': lease.notes,
+            'balance': balance,
+            'lease_status': lease.lease_status,
+        }
+        return jsonify(response_object), 200
+
+
+#Transfer Lease using tenant's public_id
+@app.route('/TransferLease/<public_id>', methods=['POST'])
+def transfer_lease(public_id):
+    tenant = Tenant.query.filter_by(public_id=public_id).first()
+    if not tenant:
+        return jsonify({'message': 'Invalid tenant'}), 400
+    lease = Lease.query.filter_by(tenant_id=tenant.tenant_id, lease_status='Inactive').first()
+    if not lease:
+        if lease.lease_status == 'Pending':
+            debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
+            balance = debt.bill_amount - debt.paid_amount
+            if not debt.debt_status == 'Fully Paid' or debt.debt_status == 'Over Paid':
+                return jsonify({'message': 'Settle your debt of ' + str(balance) + ' before renewing your lease.'}), 400
+        if lease.lease_status == 'Active':
+            debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
+            balance = debt.bill_amount - debt.paid_amount
+            if not debt.debt_status == 'Fully Paid' or debt.debt_status == 'Over Paid':
+                return jsonify({'message': 'Settle your debt of ' + str(balance) + ' before renewing your lease.'}), 400
+            request_json = request.get_json()
+            unit_id = request_json.get('unit_id')
+            lease_begin_date = request_json.get('lease_begin_date')
+            lease_end_date = request_json.get('lease_end_date')
+            lease_amount = request_json.get('lease_amount')
+            promises = request_json.get('promises')
+            service_charges = request_json.get('service_charges')
+            notes = request_json.get('notes')
+            lease_public_id = str(uuid.uuid4())
+            status_active = Status.query.filter_by(status_code=3).first()
+            lease_status = status_active.status_meaning
+            payment_interval = request_json.get('payment_interval')
+            lease = Lease(tenant.tenant_id, unit_id, lease_begin_date, lease_end_date, lease_amount, promises,
+                          service_charges, notes,
+                          lease_status,
+                          payment_interval, lease_public_id)
+            db.session.add(lease)
+            db.session.commit()
+    request_json = request.get_json()
+    unit_id = request_json.get('unit_id')
+    lease_begin_date = request_json.get('lease_begin_date')
+    lease_end_date = request_json.get('lease_end_date')
+    lease_amount = request_json.get('lease_amount')
+    promises = request_json.get('promises')
+    service_charges = request_json.get('service_charges')
+    notes = request_json.get('notes')
+    lease_public_id = str(uuid.uuid4())
+    status_active = Status.query.filter_by(status_code=3).first()
+    lease_status = status_active.status_meaning
+    payment_interval = request_json.get('payment_interval')
+    lease = Lease(tenant.tenant_id, unit_id, lease_begin_date, lease_end_date, lease_amount, promises,
+                  service_charges, notes,
+                  lease_status,
+                  payment_interval, lease_public_id)
+    db.session.add(lease)
+    db.session.commit()
