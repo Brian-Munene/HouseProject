@@ -1,4 +1,5 @@
 from datetime import datetime
+import arrow
 from routes import db
 
 
@@ -211,6 +212,7 @@ class Lease(db.Model):
         self.notes = notes
         self.lease_status = lease_status
         self.payment_interval = payment_interval
+
 
 # Status Model
 class Status(db.Model):

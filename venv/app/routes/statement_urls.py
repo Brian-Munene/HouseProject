@@ -124,7 +124,8 @@ def landlord_statement(public_id):
                 if lease:
                     debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
                     if not debt:
-                        return jsonify({'message': 'No details available'}), 400
+                        unit_dict['credit'] = 'No details available'
+                        unit_dict['debit'] = 'No details available'
                     unit_dict['credit'] = debt.bill_amount
                     unit_dict['debit'] = debt.paid_amount
                     if unit.block_id == block.block_id:
@@ -204,7 +205,8 @@ def property_manager_statement(public_id):
                 if lease:
                     debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
                     if not debt:
-                        return jsonify({'message': 'No details available'}), 400
+                        unit_dict['credit'] = 'No details available'
+                        unit_dict['debit'] = 'No details available'
                     unit_dict['credit'] = debt.bill_amount
                     unit_dict['debit'] = debt.paid_amount
                     if unit.block_id == block.block_id:
