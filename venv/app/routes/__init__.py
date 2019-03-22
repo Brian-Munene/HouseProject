@@ -15,7 +15,7 @@ CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://property_u:property_p@139.162.234.147:7309/property_db"
 
 # Development database_uri
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:motongoria@localhost:3306/plot'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:motongoria@localhost:3306/plot'
 
 app.config['SQLALCHEMY_ECHO'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -29,4 +29,4 @@ app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 #Import routes
 from routes import base_urls, unit_urls, rental_urls, user_urls, block_urls, complaint_urls, image_urls, property_urls, \
 	notification_urls,service_provider_urls, payment_urls, landlord_urls, status_urls, caretaker_urls, payment_type_urls,\
-	debt_urls, statement_urls, lease_urls
+	debt_urls, statement_urls, lease_urls, tenant_urls
