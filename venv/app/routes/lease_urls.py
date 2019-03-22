@@ -245,25 +245,37 @@ def terminate_lease(public_id):
 def transfer_lease(public_id):
     tenant = Tenant.query.filter_by(public_id=public_id).first()
     if not tenant:
-        return jsonify({'message': 'Invalid tenant'}), 400
-    lease = Lease.query.filter_by(tenant_id=tenant.tenant_id).first()
-    if lease:
-        request_json = request.get_json()
-        unit_id = request_json.get('unit_id')
-        lease_begin_date = request_json.get('lease_begin_date')
-        lease_end_date = request_json.get('lease_end_date')
-        lease_amount = request_json.get('lease_amount')
-        promises = request_json.get('promises')
-        service_charges = request_json.get('service_charges')
-        notes = request_json.get('notes')
-        lease_public_id = str(uuid.uuid4())
-        status_active = Status.query.filter_by(status_code=3).first()
-        new_lease_status = status_active.status_meaning
-        payment_interval = request_json.get('payment_interval')
-        if lease.lease_status == 'Pending':
-            debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
-            balance = debt.bill_amount - debt.paid_amount
-            return jsonify({'message': 'Settle your debt of ' + str(balance) + ' before renewing your lease.'}), 400
+        return jsonify({'message': 'You are not a tenant'}), 400
+    request_json = request.get_json()
+    unit_id = request_json.get('unit_id')
+    lease_begin_date = request_json.get('lease_begin_date')
+    lease_end_date = request_json.get('lease_end_date')
+    lease_amount = request_json.get('lease_amount')
+    promises = request_json.get('promises')
+    service_charges = request_json.get('service_charges')
+    notes = request_json.get('notes')
+    lease_public_id = str(uuid.uuid4())
+    status_active = Status.query.filter_by(status_code=3).first()
+    new_lease_status = status_active.status_meaning
+    payment_interval = request_json.get('payment_interval')
+    if not unit_id or not lease_begin_date or not lease_end_date or not lease_amount or not promises or not service_charges \
+            or not notes or not payment_interval:
+        return jsonify({'message': 'You have empty fields'}), 400
+    lease = Lease.query.filter_by(tenant_id=tenant.tenant_id).all()
+    if lease.lease_status == 'Pending':
+        debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
+        balance = debt.bill_amount - debt.paid_amount
+        return jsonify({'message': 'Settle your debt of ' + str(balance) + ' before renewing your lease.'}), 400
+    if lease.lease_status == 'Inactive':
+        current_date = arrow.utcnow().date()
+        days_stayed = (current_date - lease.lease_begin_date).days
+        if days_stayed > 14:
+            return jsonify({'message': 'You can not transfer a lease after 14 days'}), 400
+        deactivate_lease = Status.query.filter_by(status_code=4).first()
+        lease.lease_status = deactivate_lease.status_meaning
+        db.session.commit()
+
+    '''
         if lease.lease_status == 'Inactive':
             debt = Debt.query.filter_by(lease_id=lease.lease_id).first()
             balance = debt.bill_amount - debt.paid_amount
@@ -329,10 +341,6 @@ def transfer_lease(public_id):
                 }
                 return jsonify(response_object), 201
         if lease.lease_status == 'Active':
-            return jsonify({'message': 'Deactivate your current active lease'}), 400
-
-
-'''
             current_date = arrow.utcnow().date()
             days_stayed = (current_date - lease.lease_begin_date).days
             if days_stayed > 14:
