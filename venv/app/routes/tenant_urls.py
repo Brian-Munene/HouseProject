@@ -60,7 +60,7 @@ def view_manager_tenants(public_id):
     if properties:
         property_list = []
         for property in properties:
-            tenant_dict = {}
+
             blocks = Block.query.filter_by(property_id=property.property_id).all()
             if blocks:
                 for block in blocks:
@@ -70,6 +70,7 @@ def view_manager_tenants(public_id):
                             leases = Lease.query.filter_by(unit_id=unit.unit_id).all()
                             if leases:
                                 for lease in leases:
+                                    tenant_dict = {}
                                     tenant = Tenant.query.filter_by(tenant_id=lease.tenant_id).first()
                                     tenant_name = tenant.first_name + ' ' + tenant.last_name
                                     tenant_dict['lease_status'] = lease.lease_status
