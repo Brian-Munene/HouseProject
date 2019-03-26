@@ -21,7 +21,7 @@ from database.block import PropertyManager
 from database.block import PaymentType
 
 
-#View Leases using property manager user public_id
+#View Leases using property manager's user public_id
 @app.route('/ManagerLeases/<public_id>')
 def lease(public_id):
     user = User.query.filter_by(public_id=public_id).first()

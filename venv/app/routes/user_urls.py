@@ -358,8 +358,7 @@ def delete_user(public_id):
     return 'The user has been deleted!', 200
 
 
-#Update  username
-
+#Update User
 @app.route('/UpdateUser/<public_id>', methods=['POST', 'GET'])
 def update_user(public_id):
     if request.method == 'POST':
