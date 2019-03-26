@@ -37,7 +37,6 @@ PyMySQL==0.9.3
 python-dateutil==2.8.0
 python-editor==1.0.4
 pytz==2018.9
-pywin32==224
 six==1.12.0
 SQLAlchemy==1.2.17
 tempora==1.14
