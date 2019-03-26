@@ -90,7 +90,7 @@ def update_tenant(public_id):
     if request.method == 'GET':
         tenant = Tenant.query.filter_by(public_id=public_id).first()
         if not tenant:
-            return jsonify({'message': 'Invalid landlord'}), 400
+            return jsonify({'message': 'Invalid tenant'}), 400
         tenant_dict = {
             'first_name': tenant.first_name,
             'last_name': tenant.last_name,
@@ -101,7 +101,7 @@ def update_tenant(public_id):
     if request.method == 'POST':
         tenant = Tenant.query.filter_by(public_id=public_id).first()
         if not tenant:
-            return jsonify({'message': 'Not a landlord'}), 400
+            return jsonify({'message': 'Not a tenant'}), 400
         old_first_name = tenant.first_name
         old_last_name = tenant.last_name
         old_email = tenant.email

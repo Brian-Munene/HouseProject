@@ -81,7 +81,7 @@ def update_caretaker(public_id):
     if request.method == 'GET':
         caretaker = Caretaker.query.filter_by(public_id=public_id).first()
         if not caretaker:
-            return jsonify({'message': 'Invalid landlord'}), 400
+            return jsonify({'message': 'Invalid caretaker'}), 400
         caretaker_dict = {
             'first_name': caretaker.first_name,
             'last_name': caretaker.last_name,
@@ -92,7 +92,7 @@ def update_caretaker(public_id):
     if request.method == 'POST':
         caretaker = Caretaker.query.filter_by(public_id=public_id).first()
         if not caretaker:
-            return jsonify({'message': 'Not a landlord'}), 400
+            return jsonify({'message': 'Not a caretaker'}), 400
         old_first_name = caretaker.first_name
         old_last_name = caretaker.last_name
         old_email = caretaker.email
