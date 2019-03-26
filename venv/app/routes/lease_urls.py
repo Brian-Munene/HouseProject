@@ -31,6 +31,8 @@ def lease(public_id):
     if not manager:
         return jsonify({'message': 'You should be a manager to renew a lease'}), 400
     properties = Property.query.filter_by(manager_id=manager.manager_id).all()
+    if not properties:
+        return jsonify({'message': 'No Properties available'}), 400
     if properties:
         #return jsonify({'message': 'No Properties available'}), 400
         property_list = []
