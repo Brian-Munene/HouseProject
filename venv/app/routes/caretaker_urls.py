@@ -33,14 +33,14 @@ def property_caretaker(public_id):
 
 
 #View a single caretaker
-@app.route('/SingleCaretaker/<public_id>')
+@app.route('/ViewSingleCaretaker/<public_id>')
 def single_caretaker(public_id):
     caretaker = Caretaker.query.filter_by(public_id=public_id).first()
     if not caretaker:
         return jsonify({'message': 'No caretaker'}), 400
-    caretaker_name = caretaker.first_name + ' ' + caretaker.last_name
     caretaker_dict = {
-        'name': caretaker_name,
+        'first_name': caretaker.first_name,
+        'last_name': caretaker.last_name,
         'phone': caretaker.phone,
         'email': caretaker.email,
         'public_id': caretaker.public_id

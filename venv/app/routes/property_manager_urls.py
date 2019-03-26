@@ -30,14 +30,14 @@ def property_managers():
 
 
 #View Single Property Manager
-@app.route('/SinglePropertyManager/<public_id>')
+@app.route('/ViewSinglePropertyManager/<public_id>')
 def single_property_manager(public_id):
     manager = PropertyManager.query.filter_by(public_id=public_id).first()
     if not manager:
         return jsonify({'message': 'Not a property manager'}), 400
-    manager_name = manager.first_name + ' ' + manager.last_name
     manager_dict = {
-        'manager_name': manager_name,
+        'first_name': manager.first_name,
+        'last_name': manager.last_name,
         'manager_public_id': manager.public_id,
         'email': manager.email,
         'phone': manager.phone

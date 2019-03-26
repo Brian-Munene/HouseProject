@@ -31,11 +31,10 @@ def view_tenants():
     return jsonify({'data': tenant_list}), 200
 
 
-# View single tenant using user's public_id
-@app.route('/ViewSingleTenant<public_id>')
+# View single tenant using tenant's public_id
+@app.route('/ViewSingleTenant/<public_id>')
 def single_tenant(public_id):
-    user = User.query.filter_by(public_id=public_id).first()
-    tenant = Tenant.query.filter_by(email=user.email).first()
+    tenant = Tenant.query.filter_by(public_id=public_id).first()
     if not tenant:
         return jsonify({'message': 'You can not view the tenant details'}), 400
     tenant_dict = {

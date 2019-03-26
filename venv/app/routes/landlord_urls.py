@@ -29,7 +29,7 @@ def view_landlords():
     return jsonify(landlord_list), 200
 
 
-#View Single Landlord
+#View Single Landlord using landlord's public_id
 @app.route('/ViewSingleLandlord/<public_id>')
 def view_single_landlord(public_id):
     landlord = Landlord.query.filter_by(public_id=public_id).first()
