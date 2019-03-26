@@ -77,6 +77,7 @@ def view_manager_tenants(public_id):
                                     tenant_dict['lease_amount'] = str(lease.lease_amount + lease.service_charges)
                                     tenant_dict['tenant_name'] = tenant_name
                                     tenant_dict['unit_id'] = unit.unit_id
+                                    tenant_dict['property_name'] = property.property_name
                                     tenant_dict['tenant_public_id'] = tenant.public_id
                                     tenant_dict['unit_number'] = unit.unit_number
                                     property_list.append(tenant_dict)

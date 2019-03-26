@@ -78,7 +78,7 @@ def lease(public_id):
                                     balance = debt.bill_amount - debt.paid_amount
                                     lease_dict['tenant_balance'] = balance
                                     property_list.append(lease_dict)
-                    return jsonify(property_list), 200
+        return jsonify(property_list), 200
 
 
 # Renew a Tenant's lease using tenant's public_id

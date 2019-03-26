@@ -68,6 +68,7 @@ def property_manger_caretakers(public_id):
             name = caretaker.first_name + ' ' + caretaker.last_name
             caretaker_dict['name'] = name
             caretaker_dict['email'] = caretaker.email
+            caretaker_dict['property_name'] = property.property_name
             caretaker_dict['phone'] = caretaker.phone
             caretaker_dict['public_id'] = caretaker.public_id
             caretakers_list.append(caretaker_dict)
