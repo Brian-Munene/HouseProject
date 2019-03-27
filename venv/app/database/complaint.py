@@ -18,7 +18,7 @@ class Complaint(db.Model):
 
     def __init__(self, message, due_date, fixed_date, unit_id, public_id):
         self.public_id = public_id
-        self.date_posted = datetime.now()
+        self.date_posted = datetime.now().date()
         self.message = message
         self.due_date = due_date
         self.fixed_date = fixed_date
