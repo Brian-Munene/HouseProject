@@ -25,7 +25,7 @@ def create_complaint():
     request_json = request.get_json()
     message = request_json.get('message')
     today = arrow.utcnow()
-    due_date = today.shift(weeks=+3)
+    due_date = " "
     fixed_date = request_json.get('fixed_date')
     unit_id = request_json.get('unit_id')
     complaint_public_id = str(uuid.uuid4())
