@@ -24,15 +24,15 @@ from database.block import Landlord
 def create_complaint():
     request_json = request.get_json()
     message = request_json.get('message')
-    due_date = request_json.get('due_date')
-    fixed_date = request_json.get('fixed_date')
+    # due_date = request_json.get('due_date')
+    fixed_date = None
     unit_id = request_json.get('unit_id')
     complaint_public_id = str(uuid.uuid4())
-    if message is None or due_date is None or unit_id is None:
+    if message is None or unit_id is None:
         return jsonify({'message', 'Fields should not be null.'}), 422
     if not Unit.query.filter_by(unit_id=unit_id):
         return jsonify({'message': 'Unit does not exist.'}), 400
-    complaint = Complaint(message, due_date, fixed_date, unit_id, complaint_public_id)
+    complaint = Complaint(message, fixed_date, unit_id, complaint_public_id)
     db.session.add(complaint)
     db.session.commit()
     response_object = {
