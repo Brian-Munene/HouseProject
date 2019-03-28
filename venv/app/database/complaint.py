@@ -6,7 +6,7 @@ class Complaint(db.Model):
     __tablename__ = 'complaints'
     complaint_id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(70), nullable=False, unique=True)
-    date_posted = db.Column(db.DateTime, nullable=False)
+    date_posted = db.Column(db.Date, nullable=False)
     message = db.Column(db.Text, nullable=False)
     due_date = db.Column(db.Date, nullable=True)
     fixed_date = db.Column(db.Date, nullable=True)
