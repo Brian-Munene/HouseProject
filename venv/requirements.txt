@@ -22,7 +22,7 @@ Flask-Script==2.0.6
 Flask-SQLAlchemy==2.3.2
 itsdangerous==1.1.0
 jaraco.functools==2.0
-Jinja2==2.10
+Jinja2==2.11.3
 jwt==0.6.1
 kombu==4.3.0
 Mako==1.0.7
