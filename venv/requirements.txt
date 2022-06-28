@@ -1,6 +1,6 @@
 alembic==0.9.6
 amqp==2.4.2
-arrow==0.13.1
+arrow==0.15.1
 asn1crypto==0.24.0
 backports.functools-lru-cache==1.5
 bcrypt==3.1.2
